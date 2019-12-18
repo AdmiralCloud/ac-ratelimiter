@@ -37,12 +37,10 @@ const ratelimiter = () => {
     const ip = _.get(params, 'ip')
     const controller = _.get(params, 'controller', 'controller')
     const action = _.get(params, 'action', 'action')
-    const token = _.get(params, 'token')
-    const link = _.get(params, 'link')
+    const identifier = _.get(params, 'identifier')
   
     let redisKey = _.get(params, 'redisKey', (environment + ':rateLimiter:' + ip + ':' + controller + ':' + action))
-    if (token) redisKey += ':' + token
-    if (link) redisKey += ':' + link
+    if (identifier) redisKey += ':' + identifier
     return redisKey
   }
 
@@ -50,17 +48,17 @@ const ratelimiter = () => {
     const ip = _.get(req, 'determinedIP') || acts.determineIP(req)
     const controller = _.get(req, 'options.controller')
     const action = _.get(req, 'options.action')
-    const link = _.get(options, 'link')
-    const token = _.get(options, 'token')
     const name = _.get(options, 'name') || controller + '/' + action
     const knownIP = _.find(knownIPs, { ip })
+    const identifier = _.get(options, 'identifier')
+    // obscure identifier for logging
+    const logIdentifier = identifier && identifier.replace(/(\w{1,4})-(\w{1,4})/g, 'xxxx')
 
     const redisKey = prepareRedisKey({
       ip,
       controller,
       action,
-      token,
-      link,
+      identifier,
       redisKey: _.get(options, 'redisKey')
     })
 
@@ -78,7 +76,7 @@ const ratelimiter = () => {
       logger.warn(_.repeat('-', 80))
       if (debugMode) logger.warn('DEBUG MODE - DEBUG MODE - DEBUG MODE')
       logger.warn('%s | %s | %s | %s | Counter %s/%s', _.padEnd('ACRateLimiter', 15), _.padEnd(type, 12), _.padEnd(name, 32), _.padEnd((ip + ' ' + _.get(knownIP, 'name', '')), 16), rateLimitCounter, limit)
-      if (link) logger.warn('%s | Link: %s', _.padEnd(' ', 15), link)
+      if (logIdentifier) logger.warn('%s | Identifier: %s', _.padEnd(' ', 15), logIdentifier)
     }
   
 
@@ -136,9 +134,7 @@ const ratelimiter = () => {
         }
       }
     }, err => {
-      // obscure token for logging
-      let logToken = token && token.replace(/(\w{1,4})-(\w{1,4})/g, 'xxxx')
-      return cb(err, { ip, controller, action, counter: rateLimitCounter, knownIPName: _.get(knownIP, 'name', '-'), token: logToken, link })      
+      return cb(err, { ip, controller, action, counter: rateLimitCounter, knownIPName: _.get(knownIP, 'name', '-'), identifier: logIdentifier })      
     })
   }
 
