@@ -1,0 +1,19 @@
+########################
+# node.js / npm
+########################
+node_modules
+npm-debug.log
+
+########################
+# misc / editors
+########################
+*~
+*#
+**/.DS_STORE/**
+**/.netbeans/**
+**/.idea/**
+**/tmp/**
+
+**report.xml**
+**config.js**
+demo.js
