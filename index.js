@@ -15,11 +15,13 @@ const ratelimiter = () => {
   let redis
   let logger
   let debugMode
+  let knownIPs
 
   const init = (options) => {
     if (_.get(options, 'environment')) environment = _.get(options, 'environment')
     if (_.get(options, 'routes')) routes = _.get(options, 'routes')
     if (_.get(options, 'debugMode')) debugMode = _.get(options, 'debugMode')
+    if (_.get(options, 'knownIPs')) knownIPs = _.get(options, 'knownIPs')
 
     if (!_.get(options, 'redis')) {
       throw new Error('Redis instance is required')
@@ -46,17 +48,18 @@ const ratelimiter = () => {
 
   const limiter = (req, options, cb) => {
     const ip = _.get(req, 'determinedIP') || acts.determineIP(req)
-    const knownIP = _.get(options, 'knownIP')
     const controller = _.get(req, 'options.controller')
     const action = _.get(req, 'options.action')
     const link = _.get(options, 'link')
+    const token = _.get(options, 'token')
     const name = _.get(options, 'name') || controller + '/' + action
+    const knownIP = _.find(knownIPs, { ip })
 
     const redisKey = prepareRedisKey({
       ip,
       controller,
       action,
-      token: _.get(options, 'token'),
+      token,
       link,
       redisKey: _.get(options, 'redisKey')
     })
@@ -132,24 +135,18 @@ const ratelimiter = () => {
           return done()
         }
       }
-    }, cb)
+    }, err => {
+      // obscure token for logging
+      let logToken = token && token.replace(/(\w{1,4})-(\w{1,4})/g, 'xxxx')
+      return cb(err, { ip, controller, action, counter: rateLimitCounter, knownIPName: _.get(knownIP, 'name', '-'), token: logToken, link })      
+    })
   }
 
-  /**
-   * Returns the current rate limit counter key or the result (with callback)
-   * @param {} params.keyOnly If true, only the redis key is returned
-   * @param {*} cb OPTIONAL callback with (err, counter)
-   */
-  const getCurrentCounter = (params, cb) => {
-    const redisKey = prepareRedisKey(params)
-    if (!_.get(params, 'keyOnly')) return redisKey
-    redis.incr(redisKey, cb)
-  }
 
   return {
     init,
     limiter,
-    getCurrentCounter
+    prepareRedisKey
   }
 
 }

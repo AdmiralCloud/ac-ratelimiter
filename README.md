@@ -66,7 +66,7 @@ delay | Integer | 250 | Delay for throttled calls for rate limiter - see above
 # Good practice
 It is recommended to put the determined IP to the request object as req.determinedIP.
 
-Additionally, you have to put the rateLimitCounter to the request object as well as req.rateLimitCounter.
+Additionally, you can put the rateLimitCounter to the request object as req.rateLimitCounter. This way, the rate limiter does not have to fetch that value.
 
 Both values might be retrieved prior to the rate limiter so there is no need to retrieve it once again here.
 
