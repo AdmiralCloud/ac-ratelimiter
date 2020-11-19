@@ -138,11 +138,34 @@ const ratelimiter = () => {
     })
   }
 
+  const resetLimiter = (params, cb) => {
+    const ip = _.get(params, 'ip')
+    const controller = _.get(params, 'controller')
+    const action = _.get(params, 'action')
+    const identifier = _.get(params, 'identifier')
+
+    let redisKey = environment + ':rateLimiter:'
+    if (ip) redisKey += ip + ':' 
+    if (controller) redisKey += controller + ':' 
+    if (action) redisKey += action + ':'
+    if (identifier) redisKey += ':' + identifier
+    redisKey += '*'
+    redis.keys(redisKey, (err, keys) => {
+      if (err) return cb(err)
+      const multi = redis.multi()
+      _.forEach(keys, key => {
+        multi.del(key)
+      })
+      multi.exec(cb)
+    })
+  }
+
 
   return {
     init,
     limiter,
-    prepareRedisKey
+    prepareRedisKey,
+    resetLimiter
   }
 
 }
