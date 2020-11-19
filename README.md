@@ -19,7 +19,7 @@ const init = {
 acrl.init(init)
 
 // req.rateLimitCounter should have already the current count
-acrl.ratelimiter(req, {}, err => {
+acrl.limiter(req, {}, err => {
   // err.status === 900 => throttling is active
   // err.status === 429 => limiter is active
   return res.json({ status: _.get(err, 'status') })
