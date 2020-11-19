@@ -1,3 +1,20 @@
+<a name="1.0.2"></a>
+
+## [1.0.2](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.1..v1.0.2) (2020-11-19 20:10:24)
+
+
+### Bug Fix
+
+* **Limiter:** Add function to reset rate limiter | MP | [dc8cd18b6c506837f285df103f924131c9ae68b6](https://github.com/mmpro/ac-ratelimiter/commit/dc8cd18b6c506837f285df103f924131c9ae68b6)    
+Add function to reset rate limiter
+### Documentation
+
+* **Limiter:** Fixed typo in README | MP | [66edb71a0e8fa9ecdb6c6729aa695c0d06f062eb](https://github.com/mmpro/ac-ratelimiter/commit/66edb71a0e8fa9ecdb6c6729aa695c0d06f062eb)    
+Fixed typo in README
+### Chores
+
+* **Limiter:** Use ac-semantic-release | MP | [f112eda15c8f2c3bc8fe21bd5acc17fe487d3894](https://github.com/mmpro/ac-ratelimiter/commit/f112eda15c8f2c3bc8fe21bd5acc17fe487d3894)    
+Use ac-semantic-release
 <a name="1.0.1"></a>
 ## [1.0.1](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.0...v1.0.1) (2019-12-18 18:57)
 
