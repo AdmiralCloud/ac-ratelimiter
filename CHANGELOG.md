@@ -1,3 +1,16 @@
+<a name="1.0.3"></a>
+
+## [1.0.3](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.2..v1.0.3) (2020-11-21 20:10:52)
+
+
+### Bug Fix
+
+* **Limiter:** Do not use rateLimitCounter from request object | MP | [5fa94a5d4baa97882b3fc730a98b74ebd7643f27](https://github.com/mmpro/ac-ratelimiter/commit/5fa94a5d4baa97882b3fc730a98b74ebd7643f27)    
+In order to avoid a bug where expire time is not set, we do not use any other increment mechanism. Only ac-ratelimiter should handle rate limiting.
+### Chores
+
+* **Limiter:** Updated packages | MP | [7bf0e4037a07403c98cbabfbf041fb1f39ae07b5](https://github.com/mmpro/ac-ratelimiter/commit/7bf0e4037a07403c98cbabfbf041fb1f39ae07b5)    
+Updated packages
 <a name="1.0.2"></a>
 
 ## [1.0.2](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.1..v1.0.2) (2020-11-19 20:10:24)
