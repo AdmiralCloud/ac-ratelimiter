@@ -69,7 +69,7 @@ const ratelimiter = () => {
     const throttleLimit = _.get(options, 'throttleLimit', _.get(settings, 'throttleLimit', 50)) // optional
     const delay = _.get(options, 'delay', _.get(settings, 'delay', 250)) // delay in ms which kicks in if throttle if active
 
-    let rateLimitCounter = !_.get(options, 'redisKey') && _.get(req, 'rateLimitCounter') && parseInt(_.get(req, 'rateLimitCounter'))
+    let rateLimitCounter
 
     const rateLogger = (params) => {
       const type = _.get(params, 'type')
@@ -81,8 +81,7 @@ const ratelimiter = () => {
   
 
     async.series({
-      checKRedis: (done) => {
-        if (rateLimitCounter) return done()
+      increaseCounter: (done) => {
         redis.incr(redisKey, (err, result) => {
           if (err) {
             logger.error('ACRateLimiter | Redis failed %j', err)
