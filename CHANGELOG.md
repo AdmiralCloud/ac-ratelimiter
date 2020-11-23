@@ -1,3 +1,12 @@
+<a name="1.0.4"></a>
+
+## [1.0.4](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.3..v1.0.4) (2020-11-23 11:51:25)
+
+
+### Bug Fix
+
+* **Limiter:** Do not crash if identifier is no string | MP | [64ac4fb525ea2e82c673d20d82f6c97cf3bafa34](https://github.com/mmpro/ac-ratelimiter/commit/64ac4fb525ea2e82c673d20d82f6c97cf3bafa34)    
+We now check if identifier is a string before replace operation.
 <a name="1.0.3"></a>
 
 ## [1.0.3](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.2..v1.0.3) (2020-11-21 20:10:52)
