@@ -52,7 +52,7 @@ const ratelimiter = () => {
     const knownIP = _.find(knownIPs, { ip })
     const identifier = _.get(options, 'identifier')
     // obscure identifier for logging
-    const logIdentifier = identifier && identifier.replace(/(\w{1,4})-(\w{1,4})/g, 'xxxx')
+    const logIdentifier = _.isString(identifier) && identifier.replace(/(\w{1,4})-(\w{1,4})/g, 'xxxx')
 
     const redisKey = prepareRedisKey({
       ip,
