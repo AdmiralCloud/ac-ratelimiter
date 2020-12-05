@@ -37,9 +37,10 @@ const ratelimiter = () => {
     const ip = _.get(params, 'ip')
     const controller = _.get(params, 'controller', 'controller')
     const action = _.get(params, 'action', 'action')
+    const clientId = _.get(params, 'clientId', 'clientId')
     const identifier = _.get(params, 'identifier')
   
-    let redisKey = _.get(params, 'redisKey', (environment + ':rateLimiter:' + ip + ':' + controller + ':' + action))
+    let redisKey = _.get(params, 'redisKey', (environment + ':rateLimiter:' + clientId + ':' + ip + ':' + controller + ':' + action))
     if (identifier) redisKey += ':' + identifier
     return redisKey
   }
@@ -48,7 +49,8 @@ const ratelimiter = () => {
     const ip = _.get(req, 'determinedIP') || acts.determineIP(req)
     const controller = _.get(req, 'options.controller')
     const action = _.get(req, 'options.action')
-    const name = _.get(options, 'name') || controller + '/' + action
+    const clientId = _.get(options, 'clientId')
+    const route = _.get(options, 'name') || `${controller}/${action}`
     const knownIP = _.find(knownIPs, { ip })
     const identifier = _.get(options, 'identifier')
     // obscure identifier for logging
@@ -58,12 +60,13 @@ const ratelimiter = () => {
       ip,
       controller,
       action,
+      clientId,
       identifier,
       redisKey: _.get(options, 'redisKey')
     })
 
     const fallbackRoute = _.get(options, 'fallbackRoute', 'default')
-    const settings = _.find(routes, { ip, route: name }) || _.find(routes, { route: name }) || _.find(routes, { route: fallbackRoute })
+    const settings = _.find(routes, { ip, clientId, route }) || _.find(routes, { ip, route }) || _.find(routes, { clientId, route }) ||  _.find(routes, { route }) || _.find(routes, { route: fallbackRoute })
     const expires = _.get(options, 'expires', _.get(settings, 'expires', 3))
     const limit = _.get(options, 'limit', _.get(settings, 'limit', 150))
     const throttleLimit = _.get(options, 'throttleLimit', _.get(settings, 'throttleLimit', 50)) // optional
@@ -75,7 +78,7 @@ const ratelimiter = () => {
       const type = _.get(params, 'type')
       logger.warn(_.repeat('-', 80))
       if (debugMode) logger.warn('DEBUG MODE - DEBUG MODE - DEBUG MODE')
-      logger.warn('%s | %s | %s | %s | Counter %s/%s', _.padEnd('ACRateLimiter', 15), _.padEnd(type, 12), _.padEnd(name, 32), _.padEnd((ip + ' ' + _.get(knownIP, 'name', '')), 16), rateLimitCounter, limit)
+      logger.warn('%s | %s | %s | %s | Counter %s/%s', _.padEnd('ACRateLimiter', 15), _.padEnd(type, 12), _.padEnd(route, 32), _.padEnd((ip + ' ' + _.get(knownIP, 'name', '')), 16), rateLimitCounter, limit)
       if (logIdentifier) logger.warn('%s | Identifier: %s', _.padEnd(' ', 15), logIdentifier)
     }
   
