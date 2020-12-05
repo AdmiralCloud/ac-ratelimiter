@@ -1,3 +1,12 @@
+<a name="1.0.5"></a>
+
+## [1.0.5](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.4..v1.0.5) (2020-12-05 20:14:28)
+
+
+### Bug Fix
+
+* **Limiter:** For more flexibility it is now possible to bind rate limits to clientId | MP | [d55a1c6dd14473be5c257cc37305da142f684b80](https://github.com/mmpro/ac-ratelimiter/commit/d55a1c6dd14473be5c257cc37305da142f684b80)    
+For more flexibility it is now possible to bind rate limits to clientId
 <a name="1.0.4"></a>
 
 ## [1.0.4](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.3..v1.0.4) (2020-11-23 11:51:25)
