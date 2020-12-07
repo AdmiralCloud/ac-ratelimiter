@@ -1,3 +1,12 @@
+<a name="1.0.7"></a>
+
+## [1.0.7](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.6..v1.0.7) (2020-12-07 08:10:58)
+
+
+### Bug Fix
+
+* **Limiter:** Only use fallback route if not setting is available | MP | [a634585fc263ab2f2829d2bda3a1a27ae98a1d41](https://github.com/mmpro/ac-ratelimiter/commit/a634585fc263ab2f2829d2bda3a1a27ae98a1d41)    
+Limiter should check for real routes before using the fallback route.
 <a name="1.0.6"></a>
 
 ## [1.0.6](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.5..v1.0.6) (2020-12-07 07:13:12)

@@ -1,7 +1,7 @@
 {
   "name": "ac-ratelimiter",
   "description": "Simple ratelimiter for express",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "author": "Mark Poepping / support@admiralcloud.com",
   "repository": {
     "type": "git",
