@@ -1,3 +1,16 @@
+<a name="1.0.6"></a>
+
+## [1.0.6](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.5..v1.0.6) (2020-12-07 07:13:12)
+
+
+### Bug Fix
+
+* **Limiter:** Fixed order of rules | MP | [354e1a00e5f90cba767ae7ca62050e6b9f205d73](https://github.com/mmpro/ac-ratelimiter/commit/354e1a00e5f90cba767ae7ca62050e6b9f205d73)    
+Make sure to use the proper route/rule if no clientId (or IP) is set.
+### Chores
+
+* **Limiter:** Updated packages | MP | [8bd00af42be75976412d3cb4cff1b130ecd85aaa](https://github.com/mmpro/ac-ratelimiter/commit/8bd00af42be75976412d3cb4cff1b130ecd85aaa)    
+Updated packages
 <a name="1.0.5"></a>
 
 ## [1.0.5](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.4..v1.0.5) (2020-12-05 20:14:28)
