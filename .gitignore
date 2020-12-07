@@ -4,6 +4,13 @@
 node_modules
 npm-debug.log
 
+.yarn/*
+!.yarn/cache
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
 ########################
 # misc / editors
 ########################
