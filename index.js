@@ -66,7 +66,13 @@ const ratelimiter = () => {
     })
 
     const fallbackRoute = _.get(options, 'fallbackRoute', 'default')
-    const settings = _.find(routes, { ip, clientId, route }) || _.find(routes, { ip, route }) || _.find(routes, { clientId, route }) ||  _.find(routes, { route }) || _.find(routes, { route: fallbackRoute })
+    const settings = routes.find(item => {
+      if (ip && clientId && route && item.ip === ip && item.clientId === clientId && item.route === route ) return item
+      else if (ip && route && item.ip === ip && item.route === route && !item.clientId ) return item
+      else if (clientId && route && item.clientId === clientId && item.route === route && !item.ip) return item
+      else if (route && item.route === route && !item.clientId && !item.ip) return item
+      else if (fallbackRoute && item.route === fallbackRoute && !item.clientId && !item.ip) return item
+    })
     const expires = _.get(options, 'expires', _.get(settings, 'expires', 3))
     const limit = _.get(options, 'limit', _.get(settings, 'limit', 150))
     const throttleLimit = _.get(options, 'throttleLimit', _.get(settings, 'throttleLimit', 50)) // optional

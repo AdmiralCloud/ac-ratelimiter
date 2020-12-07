@@ -124,3 +124,134 @@ describe('Test section #3 - no throttling', function () {
     })
   })
 })
+
+describe('Test section #4 - routes with clientId', function() {
+  describe('RATE LIMITER TEST', function() {
+    this.timeout(5000)
+    let req = {
+      options: {
+        controller: 'customer',
+        action: 'find'
+      },
+      determinedIP: '1.2.3.4'
+    }
+    let options = {
+      clientId: 'abc'
+    }
+    it('init tests', done => {
+      init.routes = [
+        { route: 'customer/find', clientId: 'abc', throttleLimit: 1, limit: 2, expires: 3, delay: 250 },
+        { route: 'customer/find', throttleLimit: 3, limit: 10, expires: 3, delay: 250 },
+      ]
+      ratelimiter.init(init)
+      return done()
+    })
+
+    it('should not trigger', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toEqual(null)
+        return done()
+      })
+    })
+    it('should still not trigger', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toHaveProperty('status', 900)
+        return done()
+      })
+    })
+    it('should still not trigger as only throttling is active', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toEqual(null)
+        return done()
+      })
+    })
+
+    it('Now make request without clientId - should throttler after 3 requests', done => {
+      options = {}
+      return done()
+    })
+
+    it('should not trigger #1', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toEqual(null)
+        return done()
+      })
+    })
+
+    it('should not trigger #2', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toEqual(null)
+        return done()
+      })
+    })
+
+    it('should not trigger #3', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toEqual(null)
+        return done()
+      })
+    })
+
+    it('should still not trigger', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toHaveProperty('status', 900)
+        return done()
+      })
+    })
+  })
+})
+
+
+describe('Test section #5 - no limiting', function () {
+  describe('RATE LIMITER TEST', function() {
+    this.timeout(5000)
+    let req = {
+      options: {
+        controller: 'search',
+        action: 'search'
+      },
+      determinedIP: '1.2.3.4'
+    }
+
+    it('init tests', done => {
+      ratelimiter.init(init)
+      return done()
+    })
+
+    it('should not trigger #1', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toEqual(null)
+        return done()
+      })
+    })
+
+    it('should not trigger #2', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toEqual(null)
+        return done()
+      })
+    })
+
+    it('should not trigger #3', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toEqual(null)
+        return done()
+      })
+    })
+
+    it('should not trigger #4', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toEqual(null)
+        return done()
+      })
+    })
+
+    it('should not trigger #5', done => {
+      ratelimiter.limiter(req, options, (err) => {
+        expect(err).toEqual(null)
+        return done()
+      })
+    })
+  })
+})
+
