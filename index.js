@@ -150,7 +150,6 @@ const ratelimiter = () => {
         }
       }
     }, err => {
-      console.log(153, err)
       return cb(err, { ip, controller, action, counter: rateLimitCounter, knownIPName: _.get(knownIP, 'name', '-'), identifier: logIdentifier })      
     })
   }
