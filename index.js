@@ -16,12 +16,14 @@ const ratelimiter = () => {
   let logger
   let debugMode
   let knownIPs
+  let ignorePrivateIps = true
 
   const init = (options) => {
     if (_.get(options, 'environment')) environment = _.get(options, 'environment')
     if (_.get(options, 'routes')) routes = _.get(options, 'routes')
     if (_.get(options, 'debugMode')) debugMode = _.get(options, 'debugMode')
     if (_.get(options, 'knownIPs')) knownIPs = _.get(options, 'knownIPs')
+    if (_.has(options, 'ignorePrivateIps')) ignorePrivateIps = _.get(options, 'ignorePrivateIps')
 
     if (!_.get(options, 'redis')) {
       throw new Error('Redis instance is required')
@@ -47,6 +49,7 @@ const ratelimiter = () => {
 
   const limiter = (req, options, cb) => {
     const ip = _.get(req, 'determinedIP') || acts.determineIP(req)
+    if (ignorePrivateIps && acts.isPrivate(ip)) return cb(null)
     const controller = _.get(req, 'options.controller')
     const action = _.get(req, 'options.action')
     const clientId = _.get(options, 'clientId')
@@ -147,6 +150,7 @@ const ratelimiter = () => {
         }
       }
     }, err => {
+      console.log(153, err)
       return cb(err, { ip, controller, action, counter: rateLimitCounter, knownIPName: _.get(knownIP, 'name', '-'), identifier: logIdentifier })      
     })
   }
