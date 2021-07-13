@@ -1,3 +1,24 @@
+<a name="1.0.8"></a>
+
+## [1.0.8](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.7..v1.0.8) (2021-07-13 14:13:17)
+
+
+### Bug Fix
+
+* **Limiter:** Ignore private IPs per default | MP | [ef2222a12bc5a3da23d1a14c87d2be7dc3f76d3f](https://github.com/mmpro/ac-ratelimiter/commit/ef2222a12bc5a3da23d1a14c87d2be7dc3f76d3f)    
+Ignore private IPs per default
+### Style
+
+* **Limiter:** Remove console.log | MP | [4c9879e0cf8dba4b761000a077d284c4759c4458](https://github.com/mmpro/ac-ratelimiter/commit/4c9879e0cf8dba4b761000a077d284c4759c4458)    
+Remove console.log
+### Chores
+
+* **Limiter:** Use yarn 1 | MP | [841574e53c02f9bc996a3c1ec19cbf0651ad94ec](https://github.com/mmpro/ac-ratelimiter/commit/841574e53c02f9bc996a3c1ec19cbf0651ad94ec)    
+Use yarn 1
+* **Limiter:** Go back to yarn 1 | MP | [f7581c4197b9493468d273b664ed88f81b11e2c4](https://github.com/mmpro/ac-ratelimiter/commit/f7581c4197b9493468d273b664ed88f81b11e2c4)    
+Go back to yarn 1
+* **Misc:** Prepare repo for yarn2 | MP | [4aa6c6846b41548b6fab897af943ca82b9e71f28](https://github.com/mmpro/ac-ratelimiter/commit/4aa6c6846b41548b6fab897af943ca82b9e71f28)    
+Prepare repo for yarn2
 <a name="1.0.7"></a>
 
 ## [1.0.7](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.6..v1.0.7) (2020-12-07 08:10:58)
