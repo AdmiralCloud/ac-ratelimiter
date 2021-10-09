@@ -259,14 +259,17 @@ describe('Test section #5 - no limiting', function () {
 describe('Test section #6 - ignore local ips', function () {
   describe('RATE LIMITER TEST - LOCAL IPS', function() {
     this.timeout(5000)
-    it('init tests', done => {
-      req.determinedIP = '4.1.4.1'
-      init.routes = [
-        { route: 'user/find', limit: 0, expires: 3, delay: 250 },
-      ]
-      ratelimiter.init(init)
-      return done()
-    })
+
+    for (i=0; i<1000; i++) {
+      it('init tests', done => {
+        req.determinedIP = '4.1.4.1'
+        init.routes = [
+          { route: 'user/find', limit: 0, expires: 3, delay: 250 },
+        ]
+        ratelimiter.init(init)
+        return done()
+      })
+    }
 
     it('should trigger immediately', done => {
       ratelimiter.limiter(req, options, (err) => {
