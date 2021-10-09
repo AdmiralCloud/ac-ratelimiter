@@ -1,3 +1,16 @@
+<a name="1.0.9"></a>
+
+## [1.0.9](https://github.com/admiralcloud/ac-ratelimiter/compare/v1.0.8..v1.0.9) (2021-10-09 10:32:36)
+
+
+### Bug Fix
+
+* **Limiter:** Package updates | MP | [8f25561c31f8618d45affac87baa862ca1764c42](https://github.com/admiralcloud/ac-ratelimiter/commit/8f25561c31f8618d45affac87baa862ca1764c42)    
+Package updates
+### Tests
+
+* **Limiter:** Added test for local IPs | MP | [27c58ecd874d692481594d82cfde91f65909ec91](https://github.com/admiralcloud/ac-ratelimiter/commit/27c58ecd874d692481594d82cfde91f65909ec91)    
+Added test for local IPs
 <a name="1.0.8"></a>
 
 ## [1.0.8](https://github.com/mmpro/ac-ratelimiter/compare/v1.0.7..v1.0.8) (2021-07-13 14:13:17)
