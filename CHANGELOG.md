@@ -1,3 +1,28 @@
+<a name="1.0.10"></a>
+
+## [1.0.10](https://github.com/admiralcloud/ac-ratelimiter/compare/v1.0.9..v1.0.10) (2023-01-02 19:44:47)
+
+
+### Bug Fix
+
+* **Limiter:** Package updates | MP | [e98140d27fd8d7b01d26579a0a3e4c667e0d7765](https://github.com/admiralcloud/ac-ratelimiter/commit/e98140d27fd8d7b01d26579a0a3e4c667e0d7765)    
+Package updates  
+Related issues: [undefined/undefined#master](undefined/browse/master)
+### Tests
+
+* **Limiter:** Replaced expect with chai/expect | MP | [b1edd733c9561c76e2c7c0543a5da8ad5e570511](https://github.com/admiralcloud/ac-ratelimiter/commit/b1edd733c9561c76e2c7c0543a5da8ad5e570511)    
+Replaced expect with chai/expect  
+Related issues: [undefined/undefined#master](undefined/browse/master)
+### Chores
+
+* **Limiter:** Add Github workflows | MP | [ec07c17da774449b535b8b0a34a98adb5735bbe2](https://github.com/admiralcloud/ac-ratelimiter/commit/ec07c17da774449b535b8b0a34a98adb5735bbe2)    
+Add Github workflows  
+Related issues: [undefined/undefined#master](undefined/browse/master)
+### Chores
+
+* **Limiter:** Updated packages | MP | [995e427b7dc291a391ef7be1c6a6593849234000](https://github.com/admiralcloud/ac-ratelimiter/commit/995e427b7dc291a391ef7be1c6a6593849234000)    
+Updated packages  
+Related issues: [undefined/undefined#master](undefined/browse/master)
 <a name="1.0.9"></a>
 
 ## [1.0.9](https://github.com/admiralcloud/ac-ratelimiter/compare/v1.0.8..v1.0.9) (2021-10-09 10:32:36)
