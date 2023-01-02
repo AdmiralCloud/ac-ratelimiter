@@ -2,6 +2,7 @@
 
 This tool provides rate-limiter based on Redis and ExpressJs.
 
+[![Node.js CI](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/node.js.yml/badge.svg)](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/node.js.yml)
 
 ## Usage
 
