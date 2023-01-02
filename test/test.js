@@ -1,5 +1,6 @@
 const _ = require('lodash')
-const expect = require('expect')
+const { expect } = require('chai');
+
 const ratelimiter = require('../index')
 
 const redisStoreSimulator = {}
@@ -50,19 +51,19 @@ describe('Test section #1', function () {
 
     it('should not trigger', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
     it('should still not trigger', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toHaveProperty('status', 900)
+        expect(err).to.have.property('status', 900)
         return done()
       })
     })
     it('should still not trigger as only throttling is active', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
@@ -84,7 +85,7 @@ describe('Test section #2 - immediate limiter', function () {
 
     it('should trigger immediately', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toHaveProperty('status', 429)
+        expect(err).to.have.property('status', 429)
         return done()
       })
     })
@@ -106,19 +107,19 @@ describe('Test section #3 - no throttling', function () {
 
     it('should not trigger', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
     it('should still not trigger', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
     it('should trigger the limiter', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toHaveProperty('status', 429)
+        expect(err).to.have.property('status', 429)
         return done()
       })
     })
@@ -149,19 +150,19 @@ describe('Test section #4 - routes with clientId', function() {
 
     it('should not trigger', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
     it('should still not trigger', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toHaveProperty('status', 900)
+        expect(err).to.have.property('status', 900)
         return done()
       })
     })
     it('should still not trigger as only throttling is active', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
@@ -173,28 +174,28 @@ describe('Test section #4 - routes with clientId', function() {
 
     it('should not trigger #1', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
 
     it('should not trigger #2', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
 
     it('should not trigger #3', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
 
     it('should still not trigger', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toHaveProperty('status', 900)
+        expect(err).to.have.property('status', 900)
         return done()
       })
     })
@@ -220,35 +221,35 @@ describe('Test section #5 - no limiting', function () {
 
     it('should not trigger #1', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
 
     it('should not trigger #2', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
 
     it('should not trigger #3', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
 
     it('should not trigger #4', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
 
     it('should not trigger #5', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
@@ -260,7 +261,7 @@ describe('Test section #6 - ignore local ips', function () {
   describe('RATE LIMITER TEST - LOCAL IPS', function() {
     this.timeout(5000)
 
-    for (i=0; i<1000; i++) {
+    for (let i=0; i<1000; i++) {
       it('init tests', done => {
         req.determinedIP = '4.1.4.1'
         init.routes = [
@@ -273,7 +274,7 @@ describe('Test section #6 - ignore local ips', function () {
 
     it('should trigger immediately', done => {
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toHaveProperty('status', 429)
+        expect(err).to.have.property('status', 429)
         return done()
       })
     })
@@ -281,7 +282,7 @@ describe('Test section #6 - ignore local ips', function () {
     it('should not trigger', done => {
       req.determinedIP = '127.0.0.1'
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
@@ -289,7 +290,7 @@ describe('Test section #6 - ignore local ips', function () {
     it('should not trigger - IPv6', done => {
       req.determinedIP = '::ffff:127.0.0.1'
       ratelimiter.limiter(req, options, (err) => {
-        expect(err).toEqual(null)
+        expect(err).eql(null)
         return done()
       })
     })
