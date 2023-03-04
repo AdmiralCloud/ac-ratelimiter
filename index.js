@@ -1,188 +1,203 @@
-/**
- * Copyright mmpro film- und medienproduktion GmbH and other Node contributors
- *
- */
+const  { setTimeout } = require('timers/promises')
 
-const async = require('async');
-const _ = require('lodash');
-
+const NodeCache = require('node-cache')
 const acts = require('ac-ip')
 
-const ratelimiter = () => {
-
-  let environment = process.env.NODE_ENV || 'development'
-  let routes = []
-  let redis
-  let logger
-  let debugMode
-  let knownIPs
-  let ignorePrivateIps = true
-
-  const init = (options) => {
-    if (_.get(options, 'environment')) environment = _.get(options, 'environment')
-    if (_.get(options, 'routes')) routes = _.get(options, 'routes')
-    if (_.get(options, 'debugMode')) debugMode = _.get(options, 'debugMode')
-    if (_.get(options, 'knownIPs')) knownIPs = _.get(options, 'knownIPs')
-    if (_.has(options, 'ignorePrivateIps')) ignorePrivateIps = _.get(options, 'ignorePrivateIps')
-
-    if (!_.get(options, 'redis')) {
-      throw new Error('Redis instance is required')
+class ACError extends Error {
+  constructor(message, options = {}) {
+    super(message)
+    
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ACError)
     }
-    redis = _.get(options, 'redis')
-    if (!_.get(options, 'logger')) {
-      throw new Error('Logger instance is required')
+    // info
+    this.code = options.code || -1
+    this.errorMessage = message
+    // show other properties of options object
+    for (const [key, value] of Object.entries(options)) {
+      this[key] = value;
+    }    
+  }
+}
+
+class RateLimiter {
+  constructor({ redisInstance, logger = console, routes = [], knownIPs = [], ignorePrivateIps } = {}) {
+    // make sure only one instance exists!
+    if (RateLimiter._instance) {
+      return RateLimiter._instance
     }
-    logger = _.get(options, 'logger')
+    RateLimiter._instance = this;
+
+    this.environment = process.env.NODE_ENV || 'development'
+    if(redisInstance) {
+      this.redisInstance = redisInstance
+    }
+    else {
+      this.cache = new NodeCache()
+    }
+
+    this.limits = {
+      expires: 3,
+      limit: 150,
+      throttleLimit: 50,
+      delay: 250
+    }
+
+    this.logger = logger
+    this.routes = routes
+    this.knownIPs = knownIPs
+    this.ignorePrivateIps = ignorePrivateIps
   }
 
-  const prepareRedisKey = (params) => {
-    const ip = _.get(params, 'ip')
-    const controller = _.get(params, 'controller', 'controller')
-    const action = _.get(params, 'action', 'action')
-    const clientId = _.get(params, 'clientId', 'clientId')
-    const identifier = _.get(params, 'identifier')
-  
-    let redisKey = _.get(params, 'redisKey', (environment + ':rateLimiter:' + clientId + ':' + ip + ':' + controller + ':' + action))
-    if (identifier) redisKey += ':' + identifier
-    return redisKey
+
+  // private 
+  prepareRedisKey({ ip, controller = 'controller', action = 'action', clientId = 'clientId', identifier = 'identifier', redisKey }) {
+    let rateLimiterKey = redisKey || (this.environment + ':rateLimiter:' + clientId + ':' + ip + ':' + controller + ':' + action)
+    if (identifier) rateLimiterKey += ':' + identifier
+    return rateLimiterKey
   }
 
-  const limiter = (req, options, cb) => {
-    const ip = _.get(req, 'determinedIP') || acts.determineIP(req)
-    if (ignorePrivateIps && acts.isPrivate(ip)) return cb(null)
-    const controller = _.get(req, 'options.controller')
-    const action = _.get(req, 'options.action')
-    const clientId = _.get(options, 'clientId')
-    const route = _.get(options, 'name') || `${controller}/${action}`
-    const knownIP = _.find(knownIPs, { ip })
-    const identifier = _.get(options, 'identifier')
-    // obscure identifier for logging
-    const logIdentifier = _.isString(identifier) && identifier.replace(/(\w{1,4})-(\w{1,4})/g, 'xxxx')
+  async limiter(req, { 
+    ip = req?.determinedIP || acts.determineIP(req),
+    clientId = 'clientId', 
+    identifier = 'identifier', 
+    redisKey,
+    expires,
+    limit,
+    throttleLimit,
+    delay,
+    fallbackRoute = 'default',
+    name,
+    debugMode,
+    rateLimitCounter
+  }) {
 
-    const redisKey = prepareRedisKey({
+    if (this.ignorePrivateIps && acts.isPrivate(ip)) return
+
+    const logIdentifier = typeof identifier === 'string' && identifier.replace(/(\w{1,4})-(\w{1,4})/g, 'xxxx')
+    const knownIP = this.knownIPs.find(({ knownIP }) => knownIP === ip)
+
+    const controller = req?.options?.controller || 'controller'
+    const action = req?.options?.action || 'action'
+    const currentRoute = name || `${controller}/${action}`
+
+
+    const rateLimiterKey = this.prepareRedisKey({
       ip,
       controller,
       action,
       clientId,
       identifier,
-      redisKey: _.get(options, 'redisKey')
+      redisKey
     })
 
-    const fallbackRoute = _.get(options, 'fallbackRoute', 'default')
-    let settings = routes.find(item => {
-      if (ip && clientId && route && item.ip === ip && item.clientId === clientId && item.route === route ) return item
-      else if (ip && route && item.ip === ip && item.route === route && !item.clientId ) return item
-      else if (clientId && route && item.clientId === clientId && item.route === route && !item.ip) return item
-      else if (route && item.route === route && !item.clientId && !item.ip) return item
+    const rateLogger = ({ type, rateLimitCounter, currentLimit }) => {
+      this.logger.warn('-'.repeat(80))
+      if (debugMode) this.logger.warn('DEBUG MODE - DEBUG MODE - DEBUG MODE')
+      this.logger.warn('%s | %s | %s | %s | Counter %s/%s', 'ACRateLimiter'.padEnd(15), type.padEnd(12), currentRoute.padEnd(32), (ip + ' ' + (knownIP?.name || '')).padEnd(16), rateLimitCounter, currentLimit)
+      if (logIdentifier) this.logger.warn('%s | Identifier: %s', ' '.padEnd(15), logIdentifier)
+    }
+
+    let settings = this.routes.find(item => {
+      if (ip && clientId && currentRoute && item.ip === ip && item.clientId === clientId && item.route === currentRoute ) return item
+      else if (ip && currentRoute && item.ip === ip && item.route === currentRoute && !item.clientId ) return item
+      else if (clientId && currentRoute && item.clientId === clientId && item.route === currentRoute && !item.ip) return item
+      else if (currentRoute && item.route === currentRoute && !item.clientId && !item.ip) return item
     })
     if (!settings) {
       // check fallback route
-      settings = routes.find(item => {
+      settings = this.routes.find(item => {
         if (item.route === fallbackRoute && !item.clientId && !item.ip) return item
       })
     }
-    const expires = _.get(options, 'expires', _.get(settings, 'expires', 3))
-    const limit = _.get(options, 'limit', _.get(settings, 'limit', 150))
-    const throttleLimit = _.get(options, 'throttleLimit', _.get(settings, 'throttleLimit', 50)) // optional
-    const delay = _.get(options, 'delay', _.get(settings, 'delay', 250)) // delay in ms which kicks in if throttle if active
-
-    let rateLimitCounter
-
-    const rateLogger = (params) => {
-      const type = _.get(params, 'type')
-      logger.warn(_.repeat('-', 80))
-      if (debugMode) logger.warn('DEBUG MODE - DEBUG MODE - DEBUG MODE')
-      logger.warn('%s | %s | %s | %s | Counter %s/%s', _.padEnd('ACRateLimiter', 15), _.padEnd(type, 12), _.padEnd(route, 32), _.padEnd((ip + ' ' + _.get(knownIP, 'name', '')), 16), rateLimitCounter, limit)
-      if (logIdentifier) logger.warn('%s | Identifier: %s', _.padEnd(' ', 15), logIdentifier)
+    
+    let current = {
+      expires,
+      limit,
+      throttleLimit,
+      delay
     }
-  
 
-    async.series({
-      increaseCounter: (done) => {
-        redis.incr(redisKey, (err, result) => {
-          if (err) {
-            logger.error('ACRateLimiter | Redis failed %j', err)
-            // silently ignore
-            return done()
-          }
-          rateLimitCounter = result
-          return done()
-        })
-      },
-      processLimits: (done) => {
-        if (rateLimitCounter === 1 && rateLimitCounter < limit) {
-          // key has never been set before - set expire time and return
-          redis.expire(redisKey, expires, done)
-        }
-        else if (rateLimitCounter > limit) {
-          // only log every 10th entry
-          if (rateLimitCounter === limit || rateLimitCounter % 10 === 0) {
-            rateLogger({ type: 'Blocking' })
-          }
-          // debug mode shows the rate limiting but does not limit
-          if (debugMode) return done()
-          return done({ message: 'tooManyRequestsFromThisIP', status: 429, logging: false, counter: rateLimitCounter, additionalInfo: { expires } })
-        }
-        else if (throttleLimit && rateLimitCounter > limit * 0.9) {
-          // at 90 percent delay with expire time, to avoid limit kicking in
-          rateLogger({ type: 'Final Throttling' })
-          _.delay(() => {
-            // do not "taint" process time when deliberately throttline
-            if (req._startTime) req._startTime += expires * 1000
-
-            return done({ message: 'finalThrottlingActive_requestsIsDelayed', status: 900, additionalInfo: { expires } })
-          }, expires * 1000)
-        }
-        else if (throttleLimit && rateLimitCounter > throttleLimit) {
-          // log the first throttling and every 50th entry
-          if (rateLimitCounter === (throttleLimit + 1) || rateLimitCounter % 50 === 0) {
-            rateLogger({ type: 'Throttling' })
-          }
-          _.delay(() => {
-            // do not "taint" process time when deliberately throttline
-            if (req._startTime) req._startTime += delay
-
-            return done({ message: 'throttlingActive_requestsIsDelayed', status: 900, additionalInfo: { expires } })
-          }, delay)
-        }
-        else {
-          return done()
-        }
+    const props = ['expires', 'limit', 'throttleLimit', 'delay']
+    props.forEach(prop => {
+      if (!Number.isFinite(current[prop])) {
+        // use from setting
+        if (Number.isFinite(settings?.[prop])) current[prop] = settings[prop]
+        else current[prop] = this.limits[prop]
       }
-    }, err => {
-      return cb(err, { ip, controller, action, counter: rateLimitCounter, knownIPName: _.get(knownIP, 'name', '-'), identifier: logIdentifier })      
     })
+
+    if (rateLimitCounter) {
+      // if rateLimitCounter is sent with the request, then don't fetch it again
+    }
+    else if (this.redisInstance) {
+      // use Redis instance for rate limiting
+      rateLimitCounter = await this.redisInstance.incr(rateLimiterKey)
+      if (rateLimitCounter === 1 && rateLimitCounter < current.limit) {
+        // key has never been set before - set expire time and return
+        await this.redisInstance.expire(redisKey, expires)
+      }
+    }
+    else {
+      // use Node cache (memory) for rate limiting - please see README before using in production!
+      rateLimitCounter = this.cache.get(rateLimiterKey)
+      let ts = this.cache.getTtl(rateLimiterKey) // ts in ms when the key will expire
+      rateLimitCounter = rateLimitCounter + 1 || 1
+      if (ts === undefined || ts === 0) {
+        // first entry - set expiration
+        this.cache.set(rateLimiterKey, rateLimitCounter, current?.expires )
+      }
+      else {
+        // update but use the existing timestamp
+        const newTTL = ts - new Date().getTime()
+        this.cache.set(rateLimiterKey, rateLimitCounter, Math.ceil(newTTL/1000))
+      }
+    }
+
+    if (debugMode) {
+      console.log('Route %s | Current Counter %s | Throttle %s | Limit %s | Delay %s | Expires %s', currentRoute, rateLimitCounter, current.throttleLimit, current.limit, current.delay, current.expires) 
+    }
+
+    if (rateLimitCounter > current.limit) {
+      // only log every 10th entry
+      if (rateLimitCounter === current.limit || rateLimitCounter % 10 === 0) {
+        rateLogger({ type: 'Blocking', rateLimitCounter, currentLimit: current.limit })
+      }
+      throw new ACError('tooManyRequestsFromThisIP', { status: 429, logging: false, counter: rateLimitCounter, additionalInfo: { expires: current.expires } })
+      
+    }
+    else if (current.throttleLimit && rateLimitCounter > current.limit * 0.9) {
+      // at 90 percent delay with expire time, to avoid limit kicking in
+      rateLogger({ type: 'Final Throttling', rateLimitCounter, currentLimit: current.limit })
+      await setTimeout(current.expires * 1000)
+      // do not "taint" process time when deliberately throttline
+      if (req._startTime) req._startTime += current.expires * 1000
+      throw new ACError('finalThrottlingActive_requestsIsDelayed', { status: 900, additionalInfo: { counter: rateLimitCounter, expires: current.expires } })
+    }
+    else if (current.throttleLimit && rateLimitCounter > current.throttleLimit) {
+      // log the first throttling and every 50th entry
+      if (rateLimitCounter === (throttleLimit + 1) || rateLimitCounter % 50 === 0) {
+        rateLogger({ type: 'Throttling', rateLimitCounter, currentLimit: current.limit })
+      }
+      await setTimeout(current.delay)
+      // do not "taint" process time when deliberately throttline
+      if (req._startTime) req._startTime += current.delay
+      throw new ACError('throttlingActive_requestsIsDelayed', { status: 900, additionalInfo: { counter: rateLimitCounter, expires: current.expires } })
+    }
   }
 
-  const resetLimiter = (params, cb) => {
-    const ip = _.get(params, 'ip')
-    const controller = _.get(params, 'controller')
-    const action = _.get(params, 'action')
-    const identifier = _.get(params, 'identifier')
-
-    let redisKey = environment + ':rateLimiter:'
-    if (ip) redisKey += ip + ':' 
-    if (controller) redisKey += controller + ':' 
-    if (action) redisKey += action + ':'
-    if (identifier) redisKey += ':' + identifier
-    redisKey += '*'
-    redis.keys(redisKey, (err, keys) => {
-      if (err) return cb(err)
-      const multi = redis.multi()
-      _.forEach(keys, key => {
-        multi.del(key)
-      })
-      multi.exec(cb)
-    })
+  async updateLimiter({ routes, knownIPs, ignorePrivateIps }) {
+    if (Array.isArray(routes)) this.routes = routes
+    if (Array.isArray(knownIPs)) this.knownIPs = knownIPs
+    if (typeof ignorePrivateIps === 'boolean') this.ignorePrivateIps = ignorePrivateIps
   }
 
-
-  return {
-    init,
-    limiter,
-    prepareRedisKey,
-    resetLimiter
+  async resetLimiter() {
+    // reset completely
+    this.cache.flushAll()
   }
+
 
 }
-module.exports = ratelimiter()
+
+module.exports = RateLimiter

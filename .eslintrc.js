@@ -17,10 +17,11 @@ const config = {
   },
   globals: {
     describe: true,
-    it: true
+    it: true,
+    after: true
   },
   'parserOptions': {
-    'ecmaVersion': 2018
+    'ecmaVersion': 2022
 },
 }
 

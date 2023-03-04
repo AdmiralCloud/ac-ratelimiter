@@ -2,7 +2,7 @@
   "name": "ac-ratelimiter",
   "description": "Simple ratelimiter for express",
   "version": "1.0.10",
-  "author": "Mark Poepping",
+  "author": "Mark Poepping (www.admiralcloud.com)",
   "repository": {
     "type": "git",
     "url": "git://github.com/admiralcloud/ac-ratelimiter"
@@ -10,13 +10,13 @@
   "homepage": "https://www.admiralcloud.com",
   "dependencies": {
     "ac-ip": "^3.0.1",
-    "async": "^3.2.4",
-    "lodash": "^4.17.21"
+    "node-cache": "^5.1.2"
   },
   "devDependencies": {
-    "ac-semantic-release": "^0.3.4",
+    "ac-semantic-release": "^0.3.5",
     "chai": "^4.3.7",
-    "eslint": "8.31.0",
+    "eslint": "8.35.0",
+    "ioredis": "^5.3.1",
     "mocha": "^10.2.0"
   },
   "scripts": {
@@ -25,6 +25,6 @@
     "test-jenkins": "JUNIT_REPORT_PATH=./report.xml mocha --slow 1000 --colors --reporter mocha-jenkins-reporter --reporter-options junit_report_name='RATELIMITER'"
   },
   "engines": {
-    "node": ">=10.0.0"
+    "node": ">=16.0.0"
   }
 }
