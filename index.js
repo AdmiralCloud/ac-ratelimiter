@@ -49,6 +49,10 @@ class RateLimiter {
     this.ignorePrivateIps = ignorePrivateIps
   }
 
+  whichStorage() {
+    if (this.redisInstance) return 'Redis'
+    else return 'NodeCache'
+  }
 
   // private 
   prepareRedisKey({ ip, controller = 'controller', action = 'action', clientId = 'clientId', identifier = 'identifier', redisKey }) {
