@@ -1,3 +1,28 @@
+<a name="2.0.0"></a>
+ 
+# [2.0.0](https://github.com/admiralcloud/ac-ratelimiter/compare/v1.0.10..v2.0.0) (2024-02-26 07:51:24)
+
+
+### Feature
+
+* **Limiter:** Add function to return which storage is used | MP | [cad5a69e1265b8ed44f1146a2dddc65777ba94da](https://github.com/admiralcloud/ac-ratelimiter/commit/cad5a69e1265b8ed44f1146a2dddc65777ba94da)    
+Add function to return which storage is used  
+Related issues: [undefined/undefined#develop](undefined/browse/develop)
+* **Limiter:** Complete re-write as class | MP | [951f21582833e06fccc90ee65edf6eadd30c4d24](https://github.com/admiralcloud/ac-ratelimiter/commit/951f21582833e06fccc90ee65edf6eadd30c4d24)    
+Ratelimiter is now a class and works out-of-the-box without Redis  
+Related issues: [undefined/undefined#develop](undefined/browse/develop)
+### Bug Fix
+
+* **Limiter:** Package updates | MP | [05828c26cdd56dde87258267d014c0019532647e](https://github.com/admiralcloud/ac-ratelimiter/commit/05828c26cdd56dde87258267d014c0019532647e)    
+Package updates  
+Related issues: [undefined/undefined#develop](undefined/browse/develop)
+### Chores
+
+* **Limiter:** Make this version 2.0.0-beta.1 | MP | [8b1361c91332180ad3f2c6b14bf33f3330048400](https://github.com/admiralcloud/ac-ratelimiter/commit/8b1361c91332180ad3f2c6b14bf33f3330048400)    
+Make this version 2.0.0-beta.1  
+Related issues: [undefined/undefined#develop](undefined/browse/develop)
+## BREAKING CHANGES
+* **Limiter:** Complete re-write as class
 <a name="1.0.10"></a>
 
 ## [1.0.10](https://github.com/admiralcloud/ac-ratelimiter/compare/v1.0.9..v1.0.10) (2023-01-02 19:44:47)
