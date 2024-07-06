@@ -6,7 +6,7 @@ const ratelimiterModule = require('../index')
 const Redis = require('ioredis')
 const redis = new Redis()
 
-let req = {
+const req = {
   options: {
     controller: 'user',
     action: 'find',
@@ -15,12 +15,12 @@ let req = {
 }
 
 
-let initOptions = {
+const initOptions = {
   routes: [
     { route: 'user/find', throttleLimit: 1, limit: 2, expires: 3, delay: 250 },
   ]
 }
-let options = {}
+const options = {}
 
 const ratelimiter = new ratelimiterModule(initOptions)
 const ratelimiterRedis = new ratelimiterModule({ redisInstance: redis, routes: initOptions.routes })
@@ -37,7 +37,7 @@ describe('Use NodeCache', () => {
       })
 
       it('should not trigger - req #1', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
       it('should still not trigger - req #2 - but throw 900', async() => {
@@ -45,12 +45,13 @@ describe('Use NodeCache', () => {
           await ratelimiter.limiter(req, options)
         }
         catch(e) {
+          console.log(45, e)
           expect(e).to.have.property('message', 'finalThrottlingActive_requestsIsDelayed')
-          expect(e).to.have.property('status', 900)
+          expect(e).to.have.property('code', 900)
         }
       })
       it('should not trigger - req #3 - rate limiter is reset', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
     })
@@ -81,7 +82,7 @@ describe('Use NodeCache', () => {
         catch(e) {
           expect(e).to.be.an('error')
           expect(e).to.have.property('message', 'tooManyRequestsFromThisIP')
-          expect(e).to.have.property('status', 429)
+          expect(e).to.have.property('code', 429)
         }
       })
     })
@@ -105,7 +106,7 @@ describe('Use NodeCache', () => {
 
       it('should not trigger req #1', async() => {
         req.determinedIP = '2.3.4.1'
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
       it('should still not trigger - delayed req #2', async() => {
@@ -114,7 +115,7 @@ describe('Use NodeCache', () => {
         }
         catch(e) {
           expect(e).to.have.property('message', 'finalThrottlingActive_requestsIsDelayed')
-          expect(e).to.have.property('status', 900)
+          expect(e).to.have.property('code', 900)
         }
       })
       it('should trigger the limiter', async() => {
@@ -123,7 +124,7 @@ describe('Use NodeCache', () => {
         }
         catch(e) {
           expect(e).to.have.property('message', 'tooManyRequestsFromThisIP')
-          expect(e).to.have.property('status', 429)
+          expect(e).to.have.property('code', 429)
         }
       })
     })
@@ -132,7 +133,7 @@ describe('Use NodeCache', () => {
   describe('Test section #4 - routes with clientId', function() {
     describe('RATE LIMITER TEST', function() {
       this.timeout(5000)
-      let req = {
+      const req = {
         options: {
           controller: 'customer',
           action: 'find'
@@ -152,7 +153,7 @@ describe('Use NodeCache', () => {
       })
 
       it('should not trigger - req #1', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
       it('should still not trigger but delay - req #2', async() => {
@@ -161,11 +162,11 @@ describe('Use NodeCache', () => {
         }
         catch(e) {
           expect(e).to.have.property('message', 'finalThrottlingActive_requestsIsDelayed')
-          expect(e).to.have.property('status', 900)
+          expect(e).to.have.property('code', 900)
         }
       })
       it('should still not trigger as ratelimiter is reset', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
 
@@ -179,17 +180,17 @@ describe('Use NodeCache', () => {
       })
 
       it('should not trigger #1', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
 
       it('should not trigger #2', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
 
       it('should not trigger #3', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
 
@@ -199,7 +200,7 @@ describe('Use NodeCache', () => {
         }
         catch(e) {
           expect(e).to.have.property('message', 'throttlingActive_requestsIsDelayed')
-          expect(e).to.have.property('status', 900)
+          expect(e).to.have.property('code', 900)
         }
       })
     })
@@ -208,7 +209,7 @@ describe('Use NodeCache', () => {
   describe('Test section #5 - no limiting', function () {
     describe('RATE LIMITER TEST', function() {
       this.timeout(5000)
-      let req = {
+      const req = {
         options: {
           controller: 'search',
           action: 'search'
@@ -221,27 +222,27 @@ describe('Use NodeCache', () => {
       })
 
       it('should not trigger #1', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
 
       it('should not trigger #2', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
 
       it('should not trigger #3', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
 
       it('should not trigger #4', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
 
       it('should not trigger #5', async() => {
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
     })
@@ -251,7 +252,7 @@ describe('Use NodeCache', () => {
     describe('RATE LIMITER TEST - ignorePrivateIps', function() {
       this.timeout(5000)
 
-      let req = {
+      const req = {
         options: {
           controller: 'user',
           action: 'find'
@@ -278,19 +279,19 @@ describe('Use NodeCache', () => {
         }
         catch(e) {
           expect(e).to.have.property('message', 'tooManyRequestsFromThisIP')
-          expect(e).to.have.property('status', 429)
+          expect(e).to.have.property('code', 429)
         }
       })
 
       it('should not trigger', async() => {
         req.determinedIP = '127.0.0.1'
-        let result = await ratelimiter.limiter(req, options)
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
 
-      it('should not trigger - IPv6', async() => {
-        req.determinedIP = '::ffff:127.0.0.1'
-        let result = await ratelimiter.limiter(req, options)
+      it('should not trigger - private IPv6', async() => {
+        req.determinedIP = 'FD8A:4C5D:3E1F:0001:ABCD:1234:5678:9ABC'
+        const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
     })
@@ -313,7 +314,7 @@ describe('Use NodeCache', () => {
       })
 
       it('should not trigger', async() => {
-        let result = await ratelimiter.limiter(req, { rateLimitCounter: 0 })
+        const result = await ratelimiter.limiter(req, { rateLimitCounter: 0 })
         expect(result).eql(undefined)
       })
 
@@ -323,7 +324,7 @@ describe('Use NodeCache', () => {
         }
         catch(e) {
           expect(e).to.have.property('message', 'tooManyRequestsFromThisIP')
-          expect(e).to.have.property('status', 429)
+          expect(e).to.have.property('code', 429)
         }
       })
 
@@ -353,13 +354,13 @@ describe('Use Redis', () => {
     it('should trigger immediately', async()  => {
       req.determinedIP = '4.1.4.1'
       try {
-        let x = await ratelimiterRedis.limiter(req, options)
+        const x = await ratelimiterRedis.limiter(req, options)
         console.log(304, x)
       }
       catch(e) {
         expect(e).to.be.an('error')
         expect(e).to.have.property('message', 'tooManyRequestsFromThisIP')
-        expect(e).to.have.property('status', 429)
+        expect(e).to.have.property('code', 429)
       }
     })
 
@@ -376,7 +377,7 @@ describe('Use Redis', () => {
     })
 
     it('req #1 should not trigger', async()  => {
-      let result = await ratelimiterRedis.limiter(req, options)
+      const result = await ratelimiterRedis.limiter(req, options)
       expect(result).eql(undefined)
     })
 
@@ -388,13 +389,13 @@ describe('Use Redis', () => {
       catch(e) {
         expect(e).to.be.an('error')
         expect(e).to.have.property('message', 'finalThrottlingActive_requestsIsDelayed')
-        expect(e).to.have.property('status', 900)
+        expect(e).to.have.property('code', 900)
         expect(e.additionalInfo).to.have.property('counter', 2)
       }
     })
 
     it('req #3 should not trigger the limiter - the throttling has reset the limiter', async()  => {
-      let result = await ratelimiterRedis.limiter(req, options)
+      const result = await ratelimiterRedis.limiter(req, options)
       expect(result).eql(undefined)
     })
 

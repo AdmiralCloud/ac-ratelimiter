@@ -2,23 +2,7 @@ const  { setTimeout } = require('timers/promises')
 
 const NodeCache = require('node-cache')
 const acts = require('ac-ip')
-
-class ACError extends Error {
-  constructor(message, options = {}) {
-    super(message)
-    
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ACError)
-    }
-    // info
-    this.code = options.code || -1
-    this.errorMessage = message
-    // show other properties of options object
-    for (const [key, value] of Object.entries(options)) {
-      this[key] = value;
-    }    
-  }
-}
+const { ACError } = require('ac-custom-error') 
 
 class RateLimiter {
   constructor({ redisInstance, logger = console, routes = [], knownIPs = [], ignorePrivateIps } = {}) {
@@ -76,7 +60,7 @@ class RateLimiter {
     rateLimitCounter
   }) {
 
-    if (this.ignorePrivateIps && acts.isPrivate(ip)) return
+    if (this.ignorePrivateIps && acts.isPrivateIP(ip)) return
 
     const logIdentifier = typeof identifier === 'string' && identifier.replace(/(\w{1,4})-(\w{1,4})/g, 'xxxx')
     const knownIP = this.knownIPs.find(({ knownIP }) => knownIP === ip)
@@ -115,7 +99,7 @@ class RateLimiter {
       })
     }
     
-    let current = {
+    const current = {
       expires,
       limit,
       throttleLimit,
@@ -145,7 +129,7 @@ class RateLimiter {
     else {
       // use Node cache (memory) for rate limiting - please see README before using in production!
       rateLimitCounter = this.cache.get(rateLimiterKey)
-      let ts = this.cache.getTtl(rateLimiterKey) // ts in ms when the key will expire
+      const ts = this.cache.getTtl(rateLimiterKey) // ts in ms when the key will expire
       rateLimitCounter = rateLimitCounter + 1 || 1
       if (ts === undefined || ts === 0) {
         // first entry - set expiration
@@ -167,7 +151,7 @@ class RateLimiter {
       if (rateLimitCounter === current.limit || rateLimitCounter % 10 === 0) {
         rateLogger({ type: 'Blocking', rateLimitCounter, currentLimit: current.limit })
       }
-      throw new ACError('tooManyRequestsFromThisIP', { status: 429, logging: false, counter: rateLimitCounter, additionalInfo: { expires: current.expires } })
+      throw new ACError('tooManyRequestsFromThisIP', 429, { logging: false, counter: rateLimitCounter, expires: current.expires })
       
     }
     else if (current.throttleLimit && rateLimitCounter > current.limit * 0.9) {
@@ -176,7 +160,7 @@ class RateLimiter {
       await setTimeout(current.expires * 1000)
       // do not "taint" process time when deliberately throttline
       if (req._startTime) req._startTime += current.expires * 1000
-      throw new ACError('finalThrottlingActive_requestsIsDelayed', { status: 900, additionalInfo: { counter: rateLimitCounter, expires: current.expires } })
+      throw new ACError('finalThrottlingActive_requestsIsDelayed', 900, { counter: rateLimitCounter, expires: current.expires })
     }
     else if (current.throttleLimit && rateLimitCounter > current.throttleLimit) {
       // log the first throttling and every 50th entry
@@ -186,7 +170,7 @@ class RateLimiter {
       await setTimeout(current.delay)
       // do not "taint" process time when deliberately throttline
       if (req._startTime) req._startTime += current.delay
-      throw new ACError('throttlingActive_requestsIsDelayed', { status: 900, additionalInfo: { counter: rateLimitCounter, expires: current.expires } })
+      throw new ACError('throttlingActive_requestsIsDelayed', 900, { counter: rateLimitCounter, expires: current.expires })
     }
   }
 
