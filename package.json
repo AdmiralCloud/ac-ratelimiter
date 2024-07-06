@@ -10,7 +10,7 @@
   "homepage": "https://www.admiralcloud.com",
   "dependencies": {
     "ac-custom-error": "^1.0.0",
-    "ac-ip": "^4.0.0",
+    "ac-ip": "^4.1.0",
     "node-cache": "^5.1.2"
   },
   "devDependencies": {

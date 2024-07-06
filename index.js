@@ -60,7 +60,7 @@ class RateLimiter {
     rateLimitCounter
   }) {
 
-    if (this.ignorePrivateIps && acts.isPrivateIP(ip)) return
+    if (this.ignorePrivateIps && acts.isSpecialIP(ip)) return
 
     const logIdentifier = typeof identifier === 'string' && identifier.replace(/(\w{1,4})-(\w{1,4})/g, 'xxxx')
     const knownIP = this.knownIPs.find(({ knownIP }) => knownIP === ip)
