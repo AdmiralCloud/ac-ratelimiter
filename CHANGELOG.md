@@ -1,3 +1,13 @@
+<a name="2.0.1"></a>
+
+## [2.0.1](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.0..v2.0.1) (2024-07-06 14:32:00)
+
+
+### Bug Fix
+
+* **Limiter:** Updated packages | MP | [6d31ce52d1b300021ba471c3a6261859604ceec5](https://github.com/admiralcloud/ac-ratelimiter/commit/6d31ce52d1b300021ba471c3a6261859604ceec5)    
+Updated packages. Use ACError package. Fixed tests for updated packages  
+Related issues: [undefined/undefined#develop](undefined/browse/develop)
 <a name="2.0.0"></a>
  
 # [2.0.0](https://github.com/admiralcloud/ac-ratelimiter/compare/v1.0.10..v2.0.0) (2024-02-26 07:51:24)
