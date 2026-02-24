@@ -9,16 +9,17 @@
   },
   "homepage": "https://www.admiralcloud.com",
   "dependencies": {
-    "ac-custom-error": "^1.0.5",
-    "ac-ip": "^4.1.6",
+    "ac-custom-error": "^2.0.1",
+    "ac-ip": "^4.1.10",
     "node-cache": "^5.1.2"
   },
   "devDependencies": {
-    "ac-semantic-release": "^0.4.8",
+    "ac-semantic-release": "^0.4.10",
     "chai": "^4.5.0",
-    "eslint": "9.35.0",
-    "ioredis": "^5.7.0",
-    "mocha": "^11.7.2"
+    "eslint": "10.0.2",
+    "globals": "^17.3.0",
+    "ioredis": "^5.9.3",
+    "mocha": "^11.7.5"
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha --slow 1000 --colors --bail ./test/test.js || :",
@@ -30,7 +31,8 @@
   },
   "resolutions": {
     "mocha/chokidar/braces": "^3.0.3",
-    "mocha/diff": "^8.0.3"
+    "mocha/diff": "^8.0.3",
+    "minimatch": "^10.2.1"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

@@ -34,14 +34,14 @@ class RateLimiter {
   }
 
   whichStorage() {
-    if (this.redisInstance) return 'Redis'
-    else return 'NodeCache'
+    if (this.redisInstance) { return 'Redis' }
+    else { return 'NodeCache' }
   }
 
   // private 
   prepareRedisKey({ ip, controller = 'controller', action = 'action', clientId = 'clientId', identifier = 'identifier', redisKey }) {
     let rateLimiterKey = redisKey || (this.environment + ':rateLimiter:' + clientId + ':' + ip + ':' + controller + ':' + action)
-    if (identifier) rateLimiterKey += ':' + identifier
+    if (identifier) { rateLimiterKey += ':' + identifier }
     return rateLimiterKey
   }
 
@@ -60,7 +60,7 @@ class RateLimiter {
     rateLimitCounter
   }) {
 
-    if (this.ignorePrivateIps && acts.isSpecialIP(ip)) return
+    if (this.ignorePrivateIps && acts.isSpecialIP(ip)) { return }
 
     const logIdentifier = typeof identifier === 'string' && identifier.replace(/(\w{1,4})-(\w{1,4})/g, 'xxxx')
     const knownIP = this.knownIPs.find(({ knownIP }) => knownIP === ip)
@@ -81,21 +81,21 @@ class RateLimiter {
 
     const rateLogger = ({ type, rateLimitCounter, currentLimit }) => {
       this.logger.warn('-'.repeat(80))
-      if (debugMode) this.logger.warn('DEBUG MODE - DEBUG MODE - DEBUG MODE')
+      if (debugMode) { this.logger.warn('DEBUG MODE - DEBUG MODE - DEBUG MODE') }
       this.logger.warn('%s | %s | %s | %s | Counter %s/%s', 'ACRateLimiter'.padEnd(15), type.padEnd(12), currentRoute.padEnd(32), (ip + ' ' + (knownIP?.name || '')).padEnd(16), rateLimitCounter, currentLimit)
-      if (logIdentifier) this.logger.warn('%s | Identifier: %s', ' '.padEnd(15), logIdentifier)
+      if (logIdentifier) { this.logger.warn('%s | Identifier: %s', ' '.padEnd(15), logIdentifier) }
     }
 
     let settings = this.routes.find(item => {
-      if (ip && clientId && currentRoute && item.ip === ip && item.clientId === clientId && item.route === currentRoute ) return item
-      else if (ip && currentRoute && item.ip === ip && item.route === currentRoute && !item.clientId ) return item
-      else if (clientId && currentRoute && item.clientId === clientId && item.route === currentRoute && !item.ip) return item
-      else if (currentRoute && item.route === currentRoute && !item.clientId && !item.ip) return item
+      if (ip && clientId && currentRoute && item.ip === ip && item.clientId === clientId && item.route === currentRoute ) { return item }
+      else if (ip && currentRoute && item.ip === ip && item.route === currentRoute && !item.clientId ) { return item }
+      else if (clientId && currentRoute && item.clientId === clientId && item.route === currentRoute && !item.ip) { return item }
+      else if (currentRoute && item.route === currentRoute && !item.clientId && !item.ip) { return item }
     })
     if (!settings) {
       // check fallback route
       settings = this.routes.find(item => {
-        if (item.route === fallbackRoute && !item.clientId && !item.ip) return item
+        if (item.route === fallbackRoute && !item.clientId && !item.ip) { return item }
       })
     }
     
@@ -110,8 +110,8 @@ class RateLimiter {
     props.forEach(prop => {
       if (!Number.isFinite(current[prop])) {
         // use from setting
-        if (Number.isFinite(settings?.[prop])) current[prop] = settings[prop]
-        else current[prop] = this.limits[prop]
+        if (Number.isFinite(settings?.[prop])) { current[prop] = settings[prop] }
+        else { current[prop] = this.limits[prop] }
       }
     })
 
@@ -143,7 +143,7 @@ class RateLimiter {
     }
 
     if (debugMode) {
-      console.log('Route %s | Current Counter %s | Throttle %s | Limit %s | Delay %s | Expires %s', currentRoute, rateLimitCounter, current.throttleLimit, current.limit, current.delay, current.expires) 
+      console.warn('Route %s | Current Counter %s | Throttle %s | Limit %s | Delay %s | Expires %s', currentRoute, rateLimitCounter, current.throttleLimit, current.limit, current.delay, current.expires) 
     }
 
     if (rateLimitCounter > current.limit) {
@@ -159,7 +159,7 @@ class RateLimiter {
       rateLogger({ type: 'Final Throttling', rateLimitCounter, currentLimit: current.limit })
       await setTimeout(current.expires * 1000)
       // do not "taint" process time when deliberately throttline
-      if (req._startTime) req._startTime += current.expires * 1000
+      if (req._startTime) { req._startTime += current.expires * 1000 }
       throw new ACError('finalThrottlingActive_requestsIsDelayed', 900, { counter: rateLimitCounter, expires: current.expires })
     }
     else if (current.throttleLimit && rateLimitCounter > current.throttleLimit) {
@@ -169,15 +169,15 @@ class RateLimiter {
       }
       await setTimeout(current.delay)
       // do not "taint" process time when deliberately throttline
-      if (req._startTime) req._startTime += current.delay
+      if (req._startTime) { req._startTime += current.delay }
       throw new ACError('throttlingActive_requestsIsDelayed', 900, { counter: rateLimitCounter, expires: current.expires })
     }
   }
 
   async updateLimiter({ routes, knownIPs, ignorePrivateIps }) {
-    if (Array.isArray(routes)) this.routes = routes
-    if (Array.isArray(knownIPs)) this.knownIPs = knownIPs
-    if (typeof ignorePrivateIps === 'boolean') this.ignorePrivateIps = ignorePrivateIps
+    if (Array.isArray(routes)) { this.routes = routes }
+    if (Array.isArray(knownIPs)) { this.knownIPs = knownIPs }
+    if (typeof ignorePrivateIps === 'boolean') { this.ignorePrivateIps = ignorePrivateIps }
   }
 
   async resetLimiter() {

@@ -45,7 +45,6 @@ describe('Use NodeCache', () => {
           await ratelimiter.limiter(req, options)
         }
         catch(e) {
-          console.log(45, e)
           expect(e).to.have.property('message', 'finalThrottlingActive_requestsIsDelayed')
           expect(e).to.have.property('code', 900)
         }
@@ -354,8 +353,7 @@ describe('Use Redis', () => {
     it('should trigger immediately', async()  => {
       req.determinedIP = '4.1.4.1'
       try {
-        const x = await ratelimiterRedis.limiter(req, options)
-        console.log(304, x)
+        await ratelimiterRedis.limiter(req, options)
       }
       catch(e) {
         expect(e).to.be.an('error')
