@@ -1,4 +1,13 @@
 
+## [2.0.8](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.7..v2.0.8) (2026-02-24 18:53:30)
+
+
+### Bug Fix
+
+* **Misc:** Package updates | MP | [2c1f50da711acab29e7e5c18c19a3be427c33100](https://github.com/admiralcloud/ac-ratelimiter/commit/2c1f50da711acab29e7e5c18c19a3be427c33100)    
+Package updates incl ESLint 9 -> 10 and lint fixes  
+Related issues:
+
 ## [2.0.7](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.6..v2.0.7) (2026-02-03 08:30:54)
 
 
