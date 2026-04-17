@@ -9,15 +9,15 @@
   },
   "homepage": "https://www.admiralcloud.com",
   "dependencies": {
-    "ac-custom-error": "^2.0.3",
-    "ac-ip": "^5.0.0",
+    "ac-custom-error": "^2.0.4",
+    "ac-ip": "^5.0.1",
     "node-cache": "^5.1.2"
   },
   "devDependencies": {
-    "ac-semantic-release": "^1.0.1",
+    "ac-semantic-release": "^1.0.2",
     "chai": "^4.5.0",
     "eslint": "10.2.0",
-    "globals": "^17.4.0",
+    "globals": "^17.5.0",
     "ioredis": "^5.10.1",
     "mocha": "^11.7.5"
   },
