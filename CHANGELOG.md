@@ -1,3 +1,11 @@
+## [2.0.13](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.12..v2.0.13) (2026-04-24 19:05:35)
+
+
+### Bug Fix
+
+
+* **App:** Package updates | MP | [70df89202420d6a1328c2733c6ff7bad02c6057d](https://github.com/admiralcloud/ac-ratelimiter/commit/70df89202420d6a1328c2733c6ff7bad02c6057d)    
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ## [2.0.12](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.11..v2.0.12) (2026-04-17 07:54:55)
 
 
