@@ -1,12 +1,13 @@
 {
   "name": "ac-ratelimiter",
   "description": "Simple ratelimiter for express",
-  "version": "2.0.13",
+  "version": "2.0.14",
   "author": "Mark Poepping (www.admiralcloud.com)",
   "repository": {
     "type": "git",
     "url": "git://github.com/admiralcloud/ac-ratelimiter"
   },
+  "license": "MIT",
   "homepage": "https://www.admiralcloud.com",
   "dependencies": {
     "ac-custom-error": "^2.0.5",
