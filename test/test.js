@@ -507,8 +507,9 @@ describe('Normal Throttling - concurrent waiting counter cap', () => {
       }
       const results = await Promise.all(promises)
       const errors = results.filter(r => r instanceof Error)
+      // NodeCache is single-threaded: the 12th request sees exactly waiting=11 → exactly 1 cap-429
       const immediate429 = errors.filter(e => e.code === 429 && e.message === 'tooManyRequestsFromThisIP')
-      expect(immediate429.length).to.be.at.least(1)
+      expect(immediate429.length).to.equal(1)
     })
 
     it('waiting counter is 0 after all concurrent requests complete', async() => {
