@@ -40,18 +40,23 @@ describe('Use NodeCache', () => {
         const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
-      it('should still not trigger - req #2 - but throw 900', async() => {
+      it('should throttle - req #2 - Normal Throttling throws 900', async() => {
         try {
           await ratelimiter.limiter(req, options)
         }
         catch(e) {
-          expect(e).to.have.property('message', 'finalThrottlingActive_requestsIsDelayed')
+          expect(e).to.have.property('message', 'throttlingActive_requestsIsDelayed')
           expect(e).to.have.property('code', 900)
         }
       })
-      it('should not trigger - req #3 - rate limiter is reset', async() => {
-        const result = await ratelimiter.limiter(req, options)
-        expect(result).eql(undefined)
+      it('should trigger the limiter - req #3 - counter exceeds limit', async() => {
+        try {
+          await ratelimiter.limiter(req, options)
+        }
+        catch(e) {
+          expect(e).to.have.property('message', 'tooManyRequestsFromThisIP')
+          expect(e).to.have.property('code', 429)
+        }
       })
     })
   })
@@ -72,7 +77,7 @@ describe('Use NodeCache', () => {
           ]
         })
       })
-    
+
       it('should trigger immediately', async()  => {
         req.determinedIP = '4.1.4.1'
         try {
@@ -108,16 +113,11 @@ describe('Use NodeCache', () => {
         const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
-      it('should still not trigger - delayed req #2', async() => {
-        try {
-          await ratelimiter.limiter(req, options)
-        }
-        catch(e) {
-          expect(e).to.have.property('message', 'finalThrottlingActive_requestsIsDelayed')
-          expect(e).to.have.property('code', 900)
-        }
+      it('should not trigger req #2 - throttleLimit is 0 so no throttling fires', async() => {
+        const result = await ratelimiter.limiter(req, options)
+        expect(result).eql(undefined)
       })
-      it('should trigger the limiter', async() => {
+      it('should trigger the limiter req #3 - counter exceeds limit', async() => {
         try {
           await ratelimiter.limiter(req, options)
         }
@@ -155,18 +155,23 @@ describe('Use NodeCache', () => {
         const result = await ratelimiter.limiter(req, options)
         expect(result).eql(undefined)
       })
-      it('should still not trigger but delay - req #2', async() => {
+      it('should throttle - req #2 - Normal Throttling throws 900', async() => {
         try {
           await ratelimiter.limiter(req, options)
         }
         catch(e) {
-          expect(e).to.have.property('message', 'finalThrottlingActive_requestsIsDelayed')
+          expect(e).to.have.property('message', 'throttlingActive_requestsIsDelayed')
           expect(e).to.have.property('code', 900)
         }
       })
-      it('should still not trigger as ratelimiter is reset', async() => {
-        const result = await ratelimiter.limiter(req, options)
-        expect(result).eql(undefined)
+      it('should trigger the limiter - req #3 - counter exceeds limit', async() => {
+        try {
+          await ratelimiter.limiter(req, options)
+        }
+        catch(e) {
+          expect(e).to.have.property('message', 'tooManyRequestsFromThisIP')
+          expect(e).to.have.property('code', 429)
+        }
       })
 
       it('Now make request without clientId - should throttler after 3 requests', async() => {
@@ -334,7 +339,7 @@ describe('Use NodeCache', () => {
 })
 
 describe('Use Redis', () => {
-  
+
   after(() => {
     redis.quit()
   })
@@ -379,22 +384,153 @@ describe('Use Redis', () => {
       expect(result).eql(undefined)
     })
 
-    it('req #2 should not trigger throttle warning', async()  => {
-
+    it('req #2 Normal Throttling - throws 900', async()  => {
       try {
         await ratelimiterRedis.limiter(req, options)
       }
       catch(e) {
         expect(e).to.be.an('error')
-        expect(e).to.have.property('message', 'finalThrottlingActive_requestsIsDelayed')
+        expect(e).to.have.property('message', 'throttlingActive_requestsIsDelayed')
         expect(e).to.have.property('code', 900)
         expect(e.additionalInfo).to.have.property('counter', 2)
       }
     })
 
-    it('req #3 should not trigger the limiter - the throttling has reset the limiter', async()  => {
-      const result = await ratelimiterRedis.limiter(req, options)
-      expect(result).eql(undefined)
+    it('req #3 exceeds limit - throws 429', async()  => {
+      try {
+        await ratelimiterRedis.limiter(req, options)
+      }
+      catch(e) {
+        expect(e).to.be.an('error')
+        expect(e).to.have.property('message', 'tooManyRequestsFromThisIP')
+        expect(e).to.have.property('code', 429)
+      }
+    })
+
+  })
+
+})
+
+
+describe('Normal Throttling - no more Final Throttling block', () => {
+
+  describe('NodeCache - requests in 90%-100% range use Normal Throttling', function() {
+    this.timeout(5000)
+
+    const reqRange = {
+      options: { controller: 'asset', action: 'get' },
+      determinedIP: '10.0.0.1'
+    }
+
+    it('Reset Limiter', async() => {
+      await ratelimiter.resetLimiter()
+    })
+
+    it('Update settings - throttleLimit=8, limit=10 (90% = counter 9)', async() => {
+      await ratelimiter.updateLimiter({
+        routes: [
+          { route: 'asset/get', throttleLimit: 8, limit: 10, expires: 5, delay: 100 }
+        ]
+      })
+    })
+
+    it('requests below throttleLimit (1-8) pass through without delay', async() => {
+      for (let i = 0; i < 8; i++) {
+        const result = await ratelimiter.limiter(reqRange, options)
+        expect(result).eql(undefined)
+      }
+    })
+
+    it('request at 90% of limit (counter=9) uses Normal Throttling - throws 900', async() => {
+      try {
+        await ratelimiter.limiter(reqRange, options)
+      }
+      catch(e) {
+        expect(e).to.have.property('message', 'throttlingActive_requestsIsDelayed')
+        expect(e).to.have.property('code', 900)
+      }
+    })
+
+    it('request exceeding limit (counter=11) returns 429 immediately', async() => {
+      try {
+        await ratelimiter.limiter(reqRange, options)
+      }
+      catch(e) {
+        expect(e).to.have.property('message', 'tooManyRequestsFromThisIP')
+        expect(e).to.have.property('code', 429)
+      }
+    })
+
+  })
+
+})
+
+
+describe('Normal Throttling - concurrent waiting counter cap', () => {
+
+  const reqWaiting = {
+    options: { controller: 'media', action: 'process' },
+    determinedIP: '9.9.9.9'
+  }
+
+  // Helper to read waiting counter from NodeCache
+  const getWaitingCount = () => {
+    const ip = reqWaiting.determinedIP
+    const controller = reqWaiting.options.controller
+    const action = reqWaiting.options.action
+    const rateLimiterKey = ratelimiter.environment + ':rateLimiter:clientId:' + ip + ':' + controller + ':' + action + ':identifier'
+    return ratelimiter.cache.get(rateLimiterKey + ':waiting') || 0
+  }
+
+  describe('NodeCache - waiting counter', function() {
+    this.timeout(10000)
+
+    it('Reset Limiter', async() => {
+      await ratelimiter.resetLimiter()
+    })
+
+    it('Update settings', async() => {
+      await ratelimiter.updateLimiter({
+        routes: [
+          { route: 'media/process', throttleLimit: 1, limit: 100, expires: 5, delay: 300 }
+        ]
+      })
+    })
+
+    it('10 concurrent waiters allowed, 11th gets 429 immediately', async() => {
+      // req #1 passes (counter=1 <= throttleLimit=1)
+      // reqs #2-11 enter Normal Throttling, waiting counter reaches 10
+      // req #12 finds waiting=11 > 10 → immediate 429 (tooManyRequestsFromThisIP)
+      const promises = []
+      for (let i = 0; i < 12; i++) {
+        promises.push(ratelimiter.limiter(reqWaiting, options).catch(e => e))
+      }
+      const results = await Promise.all(promises)
+      const errors = results.filter(r => r instanceof Error)
+      const immediate429 = errors.filter(e => e.code === 429 && e.message === 'tooManyRequestsFromThisIP')
+      expect(immediate429.length).to.be.at.least(1)
+    })
+
+    it('waiting counter is 0 after all concurrent requests complete', async() => {
+      expect(getWaitingCount()).to.equal(0)
+    })
+
+    it('waiting counter is decremented via finally even when throttle error is thrown', async() => {
+      await ratelimiter.resetLimiter()
+      // req #1 passes
+      await ratelimiter.limiter(reqWaiting, options)
+      // req #2 triggers Normal Throttling - increments waiting, delays, throws 900
+      let thrownError = null
+      try {
+        await ratelimiter.limiter(reqWaiting, options)
+      }
+      catch(e) {
+        thrownError = e
+      }
+      expect(thrownError).to.be.an('error')
+      expect(thrownError).to.have.property('code', 900)
+      // finally must have run and decremented the counter back to 0
+      expect(getWaitingCount()).to.equal(0)
     })
 
   })

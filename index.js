@@ -154,23 +154,51 @@ class RateLimiter {
       throw new ACError('tooManyRequestsFromThisIP', 429, { logging: false, counter: rateLimitCounter, expires: current.expires })
       
     }
-    else if (current.throttleLimit && rateLimitCounter > current.limit * 0.9) {
-      // at 90 percent delay with expire time, to avoid limit kicking in
-      rateLogger({ type: 'Final Throttling', rateLimitCounter, currentLimit: current.limit })
-      await setTimeout(current.expires * 1000)
-      // do not "taint" process time when deliberately throttline
-      if (req._startTime) { req._startTime += current.expires * 1000 }
-      throw new ACError('finalThrottlingActive_requestsIsDelayed', 900, { counter: rateLimitCounter, expires: current.expires })
-    }
     else if (current.throttleLimit && rateLimitCounter > current.throttleLimit) {
-      // log the first throttling and every 50th entry
-      if (rateLimitCounter === (throttleLimit + 1) || rateLimitCounter % 50 === 0) {
-        rateLogger({ type: 'Throttling', rateLimitCounter, currentLimit: current.limit })
+      const waitingKey = rateLimiterKey + ':waiting'
+
+      if (this.redisInstance) {
+        const waitingCount = await this.redisInstance.incr(waitingKey)
+        await this.redisInstance.expire(waitingKey, current.expires + 5)
+        if (waitingCount > 10) {
+          await this.redisInstance.decr(waitingKey)
+          throw new ACError('tooManyRequestsFromThisIP', 429, { counter: rateLimitCounter, expires: current.expires })
+        }
+        try {
+          // log the first throttling and every 50th entry
+          if (rateLimitCounter === (throttleLimit + 1) || rateLimitCounter % 50 === 0) {
+            rateLogger({ type: 'Throttling', rateLimitCounter, currentLimit: current.limit })
+          }
+          await setTimeout(current.delay)
+          if (req._startTime) { req._startTime += current.delay }
+          throw new ACError('throttlingActive_requestsIsDelayed', 900, { counter: rateLimitCounter, expires: current.expires })
+        } 
+        finally {
+          await this.redisInstance.decr(waitingKey)
+        }
       }
-      await setTimeout(current.delay)
-      // do not "taint" process time when deliberately throttline
-      if (req._startTime) { req._startTime += current.delay }
-      throw new ACError('throttlingActive_requestsIsDelayed', 900, { counter: rateLimitCounter, expires: current.expires })
+      else {
+        const currentWaiting = this.cache.get(waitingKey) || 0
+        const newWaiting = currentWaiting + 1
+        this.cache.set(waitingKey, newWaiting, current.expires + 5)
+        if (newWaiting > 10) {
+          this.cache.set(waitingKey, currentWaiting, current.expires + 5)
+          throw new ACError('tooManyRequestsFromThisIP', 429, { counter: rateLimitCounter, expires: current.expires })
+        }
+        try {
+          // log the first throttling and every 50th entry
+          if (rateLimitCounter === (throttleLimit + 1) || rateLimitCounter % 50 === 0) {
+            rateLogger({ type: 'Throttling', rateLimitCounter, currentLimit: current.limit })
+          }
+          await setTimeout(current.delay)
+          if (req._startTime) { req._startTime += current.delay }
+          throw new ACError('throttlingActive_requestsIsDelayed', 900, { counter: rateLimitCounter, expires: current.expires })
+        } 
+        finally {
+          const waitingNow = this.cache.get(waitingKey) || 0
+          this.cache.set(waitingKey, Math.max(0, waitingNow - 1), current.expires + 5)
+        }
+      }
     }
   }
 
