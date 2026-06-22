@@ -1,3 +1,21 @@
+## [2.0.17](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.16..v2.0.17) (2026-06-22 14:48:31)
+
+
+### Bug Fix
+
+
+* **Limiter:** Prevent connection accumulation | MP | [81f1f4834f452ce40034f8551eaa74bd78ff45b7](https://github.com/admiralcloud/ac-ratelimiter/commit/81f1f4834f452ce40034f8551eaa74bd78ff45b7)    
+Removed final throttling. Added cap for waiting requests  
+Related issues:
+* **Limiter:** Package updates | MP | [c4b41c654b3367f9cfb27916e2ec0e4458bd546e](https://github.com/admiralcloud/ac-ratelimiter/commit/c4b41c654b3367f9cfb27916e2ec0e4458bd546e)    
+Package updates  
+Related issues:
+### Tests
+
+
+* **Limiter:** Improved tests | MP | [9354bbb34c8db60d8b4fef666d9ee591f2671d95](https://github.com/admiralcloud/ac-ratelimiter/commit/9354bbb34c8db60d8b4fef666d9ee591f2671d95)    
+Tighten waiting cap assertion to exact count  
+Related issues:
 ## [2.0.16](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.15..v2.0.16) (2026-05-24 05:45:17)
 
 
