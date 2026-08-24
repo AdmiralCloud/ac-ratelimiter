@@ -409,6 +409,59 @@ describe('Use Redis', () => {
 
   })
 
+  describe('Redis - counter resets after TTL expires', function() {
+    this.timeout(8000)
+
+    const reqReset = {
+      options: { controller: 'reset', action: 'verify' },
+      determinedIP: '5.6.7.8'
+    }
+
+    it('Update settings - limit=2, expires=2', async() => {
+      await ratelimiterRedis.updateLimiter({
+        routes: [
+          { route: 'reset/verify', throttleLimit: 0, limit: 2, expires: 2, delay: 0 },
+        ],
+      })
+    })
+
+    it('req #1 should not trigger', async() => {
+      const result = await ratelimiterRedis.limiter(reqReset, options)
+      expect(result).eql(undefined)
+    })
+
+    it('req #2 should not trigger', async() => {
+      const result = await ratelimiterRedis.limiter(reqReset, options)
+      expect(result).eql(undefined)
+    })
+
+    it('req #3 exceeds limit - throws 429', async() => {
+      try {
+        await ratelimiterRedis.limiter(reqReset, options)
+      }
+      catch(e) {
+        expect(e).to.be.an('error')
+        expect(e).to.have.property('message', 'tooManyRequestsFromThisIP')
+        expect(e).to.have.property('code', 429)
+      }
+    })
+
+    it('wait for TTL to expire (3s)', async() => {
+      await setTimeout(3000)
+    })
+
+    it('req #4 after TTL reset - should not trigger (counter must have reset to 0)', async() => {
+      const result = await ratelimiterRedis.limiter(reqReset, options)
+      expect(result).eql(undefined)
+    })
+
+    it('req #5 after TTL reset - should not trigger', async() => {
+      const result = await ratelimiterRedis.limiter(reqReset, options)
+      expect(result).eql(undefined)
+    })
+
+  })
+
 })
 
 

@@ -123,7 +123,7 @@ class RateLimiter {
       rateLimitCounter = await this.redisInstance.incr(rateLimiterKey)
       if (rateLimitCounter === 1 && rateLimitCounter < current.limit) {
         // key has never been set before - set expire time and return
-        await this.redisInstance.expire(redisKey, expires)
+        await this.redisInstance.expire(rateLimiterKey, current.expires)
       }
     }
     else {
