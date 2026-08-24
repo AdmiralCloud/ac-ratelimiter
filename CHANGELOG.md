@@ -1,3 +1,12 @@
+## [2.0.22](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.21..v2.0.22) (2026-08-24 08:36:46)
+
+
+### Bug Fix
+
+
+* **Limiter:** Redis rate limiter counter never resets due to wrong key in expire call | MP | [a3f4e16fd4f68887e532d6e0270e374484e36b3d](https://github.com/admiralcloud/ac-ratelimiter/commit/a3f4e16fd4f68887e532d6e0270e374484e36b3d)    
+Redis rate limiter counter never resets due to wrong key in expire call  
+Related issues:
 ## [2.0.21](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.20..v2.0.21) (2026-08-23 11:18:23)
 
 
