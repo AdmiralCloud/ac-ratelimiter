@@ -590,3 +590,52 @@ describe('Normal Throttling - concurrent waiting counter cap', () => {
   })
 
 })
+
+describe('Bug: NodeCache window never expires under sustained low-rate traffic', () => {
+
+  const reqSustained = {
+    options: { controller: 'sustained', action: 'traffic' },
+    determinedIP: '8.8.4.4'
+  }
+
+  // mirrors prepareRedisKey() for the default clientId/identifier used when neither is sent
+  const rateLimiterKey = ratelimiter.environment + ':rateLimiter:clientId:' + reqSustained.determinedIP + ':sustained:traffic:identifier'
+
+  describe('NodeCache - expires window should reset, but Math.ceil() re-arms the TTL on every hit', function() {
+    this.timeout(10000)
+
+    it('Reset Limiter', async() => {
+      await ratelimiter.resetLimiter()
+    })
+
+    it('Update settings - expires=1s, no throttling/blocking so only the counter/TTL behaviour is observed', async() => {
+      await ratelimiter.updateLimiter({
+        routes: [
+          { route: 'sustained/traffic', throttleLimit: 0, limit: 1000, expires: 1, delay: 0 }
+        ]
+      })
+    })
+
+    it('a low, steady rate (well under any burst limit) should let the 1s window expire and reset the counter, but it never does', async() => {
+      // 3 requests/sec for 2.4s -> spans more than two 1s windows.
+      // A correctly resetting fixed window would show the counter drop back down after ~1s.
+      // The buggy Math.ceil(newTTL/1000) re-arm keeps the key alive indefinitely instead.
+      for (let i = 0; i < 8; i++) {
+        await ratelimiter.limiter(reqSustained, options)
+        await setTimeout(300)
+      }
+      // one more hit right away, then read state immediately - avoids a race where the
+      // window closed a moment earlier and the key briefly does not exist at all
+      await ratelimiter.limiter(reqSustained, options)
+
+      const counter = ratelimiter.cache.get(rateLimiterKey)
+      const ttl = ratelimiter.cache.getTtl(rateLimiterKey)
+
+      // expected: window has reset at least once in 2.4s at expires=1s, so the counter
+      // should be small (a handful of hits since the last reset), not the full call count (9).
+      expect(counter).to.be.at.most(4)
+      // expected: a window's TTL is never re-armed beyond its configured length (1s)
+      expect(ttl - new Date().getTime()).to.be.at.most(1000)
+    })
+  })
+})
