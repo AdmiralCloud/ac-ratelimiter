@@ -131,14 +131,18 @@ class RateLimiter {
       rateLimitCounter = this.cache.get(rateLimiterKey)
       const ts = this.cache.getTtl(rateLimiterKey) // ts in ms when the key will expire
       rateLimitCounter = rateLimitCounter + 1 || 1
-      if (ts === undefined || ts === 0) {
-        // first entry - set expiration
-        this.cache.set(rateLimiterKey, rateLimitCounter, current?.expires )
+      // remaining time (in ms) of the existing window, or 0 if there is none (yet) or it already expired
+      const remainingMs = (ts === undefined || ts === 0) ? 0 : ts - new Date().getTime()
+      if (remainingMs <= 0) {
+        // no window yet, or the previous one already expired - start a fresh one
+        rateLimitCounter = 1
+        this.cache.set(rateLimiterKey, rateLimitCounter, current?.expires)
       }
       else {
-        // update but use the existing timestamp
-        const newTTL = ts - new Date().getTime()
-        this.cache.set(rateLimiterKey, rateLimitCounter, Math.ceil(newTTL/1000))
+        // keep the window's original expiry exactly - do NOT round up (Math.ceil would
+        // re-arm the TTL to a full extra second on every hit and the window would never close
+        // under sustained traffic)
+        this.cache.set(rateLimiterKey, rateLimitCounter, remainingMs / 1000)
       }
     }
 
