@@ -1,3 +1,18 @@
+## [2.0.23](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.22..v2.0.23) (2026-10-01 17:18:05)
+
+
+### Bug Fix
+
+
+* **Limiter:** Rate limiter never resets under sustained low-rate traffic | MP | [7cf346c6c913efb8ab467b7f8c0638268f141835](https://github.com/admiralcloud/ac-ratelimiter/commit/7cf346c6c913efb8ab467b7f8c0638268f141835)    
+Rate limiter never resets under sustained low-rate traffic when using Node Cache  
+Related issues:
+### Chores
+
+
+* **Misc:** Updated packages | MP | [e0be801455231d736eaa9f1179554e509dbfce87](https://github.com/admiralcloud/ac-ratelimiter/commit/e0be801455231d736eaa9f1179554e509dbfce87)    
+Updated packages  
+Related issues:
 ## [2.0.22](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.21..v2.0.22) (2026-08-24 08:36:46)
 
 
