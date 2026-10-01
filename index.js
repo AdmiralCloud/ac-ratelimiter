@@ -121,7 +121,7 @@ class RateLimiter {
     else if (this.redisInstance) {
       // use Redis instance for rate limiting
       rateLimitCounter = await this.redisInstance.incr(rateLimiterKey)
-      if (rateLimitCounter === 1 && rateLimitCounter < current.limit) {
+      if (rateLimitCounter === 1) {
         // key has never been set before - set expire time and return
         await this.redisInstance.expire(rateLimiterKey, current.expires)
       }
