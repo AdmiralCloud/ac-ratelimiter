@@ -1,3 +1,18 @@
+## [2.0.24](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.23..v2.0.24) (2026-10-06 16:35:00)
+
+
+### Bug Fix
+
+
+* **Limiter:** Fix Redis key without TTL for limit <= 1, improved test | MP | [5eea477ded91b958d9591a9a6230458e30afaac9](https://github.com/admiralcloud/ac-ratelimiter/commit/5eea477ded91b958d9591a9a6230458e30afaac9)    
+Fix Redis key without TTL for limit <= 1 and improved test coverage  
+Related issues:
+### Chores
+
+
+* **Misc:** Updated packages | MP | [522dca5430c69f80f3907bc2703bf8b7d45eed00](https://github.com/admiralcloud/ac-ratelimiter/commit/522dca5430c69f80f3907bc2703bf8b7d45eed00)    
+Updated packages  
+Related issues:
 ## [2.0.23](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.22..v2.0.23) (2026-10-01 17:18:05)
 
 
