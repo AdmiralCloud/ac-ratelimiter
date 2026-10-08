@@ -1,3 +1,14 @@
+# [3.0.0](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.24..v3.0.0) (2026-10-08 14:38:06)
+
+
+### Bug Fix
+
+
+* **Limiter:** Fixed rejection handling for high waiting list | MP | [fc96475f5eafaab411a4ea114ccfe7992b8d4500](https://github.com/admiralcloud/ac-ratelimiter/commit/fc96475f5eafaab411a4ea114ccfe7992b8d4500)    
+Improve error message, when maxWaiting for throttle limit hits, allow route settings without any throttle limit  
+Related issues:
+## BREAKING CHANGES
+* **Limiter:** New error message tooManyConcurrentRequest, Route configs without throttleLimit lose the implicit throttling.
 ## [2.0.24](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.23..v2.0.24) (2026-10-06 16:35:00)
 
 
