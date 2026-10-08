@@ -6,6 +6,17 @@ For huge production load it is recommended that you use it with Redis. However, 
 
 [![Node.js CI](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/node.js.yml/badge.svg)](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/node.js.yml) [![CodeQL](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/github-code-scanning/codeql)
 
+## Breaking changes for version 3
+### New error `tooManyConcurrentRequests`
+Throttled requests wait for `delay` milliseconds. If too many requests are waiting at the same time, the limiter now throws `tooManyConcurrentRequests` (429). Before, it threw `tooManyRequestsFromThisIP`, which is now only thrown when `limit` is exceeded.
+
+You can set the maximum number of waiting requests with `maxWaiting`, per route or per call. The default is `max(10, ceil(limit / expires * delay / 1000))`.
+
+### No default throttling for configured routes
+A route config without `throttleLimit` is no longer throttled. Before, it used the global default of 50. Routes without a config and the fallback route still use the global default.
+
+To keep the old behavior, set `throttleLimit` > 0 explicitly.
+
 ## Breaking changes for version 2
 Version 2 is a complete re-write of this module. It is now a class and uses async/await.
 
@@ -52,6 +63,8 @@ try {
 catch(e) {
   // e.status === 900 => throttling is active
   // e.status === 429 => limiter is active
+  // e.message === 'tooManyRequestsFromThisIP' => limit exceeded
+  // e.message === 'tooManyConcurrentRequests' => too many throttled requests waiting at the same time (maxWaiting)
 }
 
 ```
@@ -72,6 +85,8 @@ try {
 catch(e) {
   // e.status === 900 => throttling is active
   // e.status === 429 => limiter is active
+  // e.message === 'tooManyRequestsFromThisIP' => limit exceeded
+  // e.message === 'tooManyConcurrentRequests' => too many throttled requests waiting at the same time (maxWaiting)
 }
 
 ```
@@ -87,10 +102,11 @@ Last but not least, provide an array of objects with rate limiter instructions. 
 Property | Type | Defaults | Remarks
 ---|---|---|---|
 routes | string |  | A combination of controller and action (express) or any other identifier you can provide
-throttleLimit | 50 | 20 | Number of calls before throttling starts
+throttleLimit | integer | 50 | Number of calls before throttling starts. A route-specific config without throttleLimit does not throttle (0). Only routes without any config (and the fallback route) use the global default
 delay | integer | 250 | Number of milliseconds a throttle request is delayed (on purpose)
 limit | integer | 150 | Number of calls before the limiter kicks in
 expires | integer | 3 | Number of seconds before the rate-limiter resets
+maxWaiting | integer | max(10, ceil(limit / expires * delay / 1000)) | Max. number of throttled requests waiting at the same time. Further requests are rejected with 429 `tooManyConcurrentRequests`
 
 
 
@@ -105,6 +121,7 @@ fallbackRoute | String | fbroute | Optional fallback route identifier
 expires | Integer | 3 | Expire time for rate limiter - see above
 throttleLimit | Integer | 20 | Throttle limit for rate limiter - see above
 delay | Integer | 250 | Delay for throttled calls for rate limiter - see above
+maxWaiting | Integer | 20 | Max. concurrent throttled requests for rate limiter - see above
 
 # Good practice
 It is recommended to put the determined IP to the request object as req.determinedIP.
