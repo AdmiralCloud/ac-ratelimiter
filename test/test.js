@@ -507,7 +507,7 @@ describe('Normal Throttling - concurrent waiting counter cap', () => {
     it('10 concurrent waiters allowed, 11th gets 429 immediately', async() => {
       // req #1 passes (counter=1 <= throttleLimit=1)
       // reqs #2-11 enter Normal Throttling, waiting counter reaches 10
-      // req #12 finds waiting=11 > 10 → immediate 429 (tooManyRequestsFromThisIP)
+      // req #12 finds waiting=11 > 10 → immediate 429 (tooManyConcurrentRequests)
       const promises = []
       for (let i = 0; i < 12; i++) {
         promises.push(ratelimiter.limiter(reqWaiting, options).catch(e => e))
@@ -515,7 +515,7 @@ describe('Normal Throttling - concurrent waiting counter cap', () => {
       const results = await Promise.all(promises)
       const errors = results.filter(r => r instanceof Error)
       // NodeCache is single-threaded: the 12th request sees exactly waiting=11 → exactly 1 cap-429
-      const immediate429 = errors.filter(e => e.code === 429 && e.message === 'tooManyRequestsFromThisIP')
+      const immediate429 = errors.filter(e => e.code === 429 && e.message === 'tooManyConcurrentRequests')
       assert.equal(immediate429.length, 1)
     })
 
@@ -631,7 +631,7 @@ describe('Redis - throttling and waiting counter', () => {
       promises.push(ratelimiterRedis.limiter(reqRedis, {}).catch(e => e))
     }
     const results = await Promise.all(promises)
-    const capped = results.filter(r => r instanceof Error && r.code === 429)
+    const capped = results.filter(r => r instanceof Error && r.code === 429 && r.message === 'tooManyConcurrentRequests')
     assert.equal(capped.length, 1)
     assert.equal(await redis.get(waitingKey()), 0)
   })
@@ -667,5 +667,61 @@ describe('NodeCache - debug mode and throttling log', () => {
     }
     assert.equal(warnings.some(args => args[0].startsWith('Route')), true)
     assert.equal(warnings.some(args => args[0].includes('Counter') && args[2] === 'Throttling'.padEnd(12)), true)
+  })
+})
+
+describe('Route config - throttling and maxWaiting', () => {
+
+  const reqCfg = {
+    options: { controller: 'cfg', action: 'test' },
+    determinedIP: '11.0.0.1'
+  }
+
+  const runConcurrent = async (count) => {
+    const promises = []
+    for (let i = 0; i < count; i++) {
+      promises.push(ratelimiter.limiter(reqCfg, {}).catch(e => e))
+    }
+    return Promise.all(promises)
+  }
+
+  describe('NodeCache - throttleLimit of dedicated routes', function() {
+    this.timeout(5000)
+
+    it('dedicated route without throttleLimit does not throttle', async() => {
+      await ratelimiter.resetLimiter()
+      await ratelimiter.updateLimiter({ routes: [{ route: 'cfg/test', limit: 400, expires: 3 }] })
+      // counter 100 is above the global throttleLimit (50) but below the limit
+      assert.equal(await ratelimiter.limiter(reqCfg, { rateLimitCounter: 100 }), undefined)
+    })
+
+    it('fallback route without throttleLimit uses the global throttleLimit', async() => {
+      await ratelimiter.resetLimiter()
+      await ratelimiter.updateLimiter({ routes: [{ route: 'default', limit: 400, expires: 3 }] })
+      await assert.rejects(() => ratelimiter.limiter(reqCfg, { rateLimitCounter: 100 }), { message: 'throttlingActive_requestsIsDelayed', code: 900 })
+    })
+  })
+
+  describe('NodeCache - maxWaiting', function() {
+    this.timeout(10000)
+
+    it('maxWaiting defined in route is used', async() => {
+      await ratelimiter.resetLimiter()
+      await ratelimiter.updateLimiter({ routes: [{ route: 'cfg/test', throttleLimit: 1, limit: 100, expires: 5, delay: 100, maxWaiting: 2 }] })
+      // req #1 passes, #2-#3 wait, #4-#6 exceed maxWaiting
+      const errors = (await runConcurrent(6)).filter(r => r instanceof Error)
+      const concurrent = errors.filter(e => e.code === 429 && e.message === 'tooManyConcurrentRequests')
+      assert.equal(concurrent.length, 3)
+      assert.equal(concurrent[0].additionalInfo.maxWaiting, 2)
+    })
+
+    it('default maxWaiting is derived from limit, expires and delay (min. 10)', async() => {
+      await ratelimiter.resetLimiter()
+      // 1000 / 1s * 250ms => 250 requests can wait at the same time
+      await ratelimiter.updateLimiter({ routes: [{ route: 'cfg/test', throttleLimit: 1, limit: 1000, expires: 1, delay: 100 }] })
+      const errors = (await runConcurrent(20)).filter(r => r instanceof Error)
+      assert.equal(errors.length, 19)
+      assert.ok(errors.every(e => e.code === 900))
+    })
   })
 })
