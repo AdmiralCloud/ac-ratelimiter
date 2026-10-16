@@ -1,3 +1,53 @@
+# [3.0.0](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.24..v3.0.0) (2026-10-08 14:38:06)
+
+
+### Bug Fix
+
+
+* **Limiter:** Fixed rejection handling for high waiting list | MP | [fc96475f5eafaab411a4ea114ccfe7992b8d4500](https://github.com/admiralcloud/ac-ratelimiter/commit/fc96475f5eafaab411a4ea114ccfe7992b8d4500)    
+Improve error message, when maxWaiting for throttle limit hits, allow route settings without any throttle limit  
+Related issues:
+## BREAKING CHANGES
+* **Limiter:** New error message tooManyConcurrentRequest, Route configs without throttleLimit lose the implicit throttling.
+## [2.0.24](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.23..v2.0.24) (2026-10-06 16:35:00)
+
+
+### Bug Fix
+
+
+* **Limiter:** Fix Redis key without TTL for limit <= 1, improved test | MP | [5eea477ded91b958d9591a9a6230458e30afaac9](https://github.com/admiralcloud/ac-ratelimiter/commit/5eea477ded91b958d9591a9a6230458e30afaac9)    
+Fix Redis key without TTL for limit <= 1 and improved test coverage  
+Related issues:
+### Chores
+
+
+* **Misc:** Updated packages | MP | [522dca5430c69f80f3907bc2703bf8b7d45eed00](https://github.com/admiralcloud/ac-ratelimiter/commit/522dca5430c69f80f3907bc2703bf8b7d45eed00)    
+Updated packages  
+Related issues:
+## [2.0.23](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.22..v2.0.23) (2026-10-01 17:18:05)
+
+
+### Bug Fix
+
+
+* **Limiter:** Rate limiter never resets under sustained low-rate traffic | MP | [7cf346c6c913efb8ab467b7f8c0638268f141835](https://github.com/admiralcloud/ac-ratelimiter/commit/7cf346c6c913efb8ab467b7f8c0638268f141835)    
+Rate limiter never resets under sustained low-rate traffic when using Node Cache  
+Related issues:
+### Chores
+
+
+* **Misc:** Updated packages | MP | [e0be801455231d736eaa9f1179554e509dbfce87](https://github.com/admiralcloud/ac-ratelimiter/commit/e0be801455231d736eaa9f1179554e509dbfce87)    
+Updated packages  
+Related issues:
+## [2.0.22](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.21..v2.0.22) (2026-08-24 08:36:46)
+
+
+### Bug Fix
+
+
+* **Limiter:** Redis rate limiter counter never resets due to wrong key in expire call | MP | [a3f4e16fd4f68887e532d6e0270e374484e36b3d](https://github.com/admiralcloud/ac-ratelimiter/commit/a3f4e16fd4f68887e532d6e0270e374484e36b3d)    
+Redis rate limiter counter never resets due to wrong key in expire call  
+Related issues:
 ## [2.0.21](https://github.com/admiralcloud/ac-ratelimiter/compare/v2.0.20..v2.0.21) (2026-08-23 11:18:23)
 
 

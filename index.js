@@ -54,6 +54,7 @@ class RateLimiter {
     limit,
     throttleLimit,
     delay,
+    maxWaiting,
     fallbackRoute = 'default',
     name,
     debugMode,
@@ -92,18 +93,21 @@ class RateLimiter {
       else if (clientId && currentRoute && item.clientId === clientId && item.route === currentRoute && !item.ip) { return item }
       else if (currentRoute && item.route === currentRoute && !item.clientId && !item.ip) { return item }
     })
+    let usesFallbackRoute = false
     if (!settings) {
       // check fallback route
       settings = this.routes.find(item => {
         if (item.route === fallbackRoute && !item.clientId && !item.ip) { return item }
       })
+      usesFallbackRoute = true
     }
-    
+
     const current = {
       expires,
       limit,
       throttleLimit,
-      delay
+      delay,
+      maxWaiting
     }
 
     const props = ['expires', 'limit', 'throttleLimit', 'delay']
@@ -111,9 +115,20 @@ class RateLimiter {
       if (!Number.isFinite(current[prop])) {
         // use from setting
         if (Number.isFinite(settings?.[prop])) { current[prop] = settings[prop] }
+        // dedicated route config without throttleLimit means no throttling
+        else if (prop === 'throttleLimit' && settings && !usesFallbackRoute) { current[prop] = 0 }
         else { current[prop] = this.limits[prop] }
       }
     })
+
+    if (!Number.isFinite(current.maxWaiting)) {
+      if (Number.isFinite(settings?.maxWaiting)) { current.maxWaiting = settings.maxWaiting }
+      else {
+        // max number of requests waiting at the same time when the route is hit at full rate (limit per expires)
+        const expectedWaiting = current.expires > 0 ? Math.ceil(current.limit / current.expires * current.delay / 1000) : 0
+        current.maxWaiting = Math.max(10, expectedWaiting)
+      }
+    }
 
     if (rateLimitCounter) {
       // if rateLimitCounter is sent with the request, then don't fetch it again
@@ -121,9 +136,9 @@ class RateLimiter {
     else if (this.redisInstance) {
       // use Redis instance for rate limiting
       rateLimitCounter = await this.redisInstance.incr(rateLimiterKey)
-      if (rateLimitCounter === 1 && rateLimitCounter < current.limit) {
+      if (rateLimitCounter === 1) {
         // key has never been set before - set expire time and return
-        await this.redisInstance.expire(redisKey, expires)
+        await this.redisInstance.expire(rateLimiterKey, current.expires)
       }
     }
     else {
@@ -131,14 +146,18 @@ class RateLimiter {
       rateLimitCounter = this.cache.get(rateLimiterKey)
       const ts = this.cache.getTtl(rateLimiterKey) // ts in ms when the key will expire
       rateLimitCounter = rateLimitCounter + 1 || 1
-      if (ts === undefined || ts === 0) {
-        // first entry - set expiration
-        this.cache.set(rateLimiterKey, rateLimitCounter, current?.expires )
+      // remaining time (in ms) of the existing window, or 0 if there is none (yet) or it already expired
+      const remainingMs = (ts === undefined || ts === 0) ? 0 : ts - new Date().getTime()
+      if (remainingMs <= 0) {
+        // no window yet, or the previous one already expired - start a fresh one
+        rateLimitCounter = 1
+        this.cache.set(rateLimiterKey, rateLimitCounter, current?.expires)
       }
       else {
-        // update but use the existing timestamp
-        const newTTL = ts - new Date().getTime()
-        this.cache.set(rateLimiterKey, rateLimitCounter, Math.ceil(newTTL/1000))
+        // keep the window's original expiry exactly - do NOT round up (Math.ceil would
+        // re-arm the TTL to a full extra second on every hit and the window would never close
+        // under sustained traffic)
+        this.cache.set(rateLimiterKey, rateLimitCounter, remainingMs / 1000)
       }
     }
 
@@ -160,9 +179,12 @@ class RateLimiter {
       if (this.redisInstance) {
         const waitingCount = await this.redisInstance.incr(waitingKey)
         await this.redisInstance.expire(waitingKey, current.expires + 5)
-        if (waitingCount > 10) {
+        if (waitingCount > current.maxWaiting) {
           await this.redisInstance.decr(waitingKey)
-          throw new ACError('tooManyRequestsFromThisIP', 429, { counter: rateLimitCounter, expires: current.expires })
+          if (rateLimitCounter % 10 === 0) {
+            rateLogger({ type: 'Waiting', rateLimitCounter, currentLimit: current.limit })
+          }
+          throw new ACError('tooManyConcurrentRequests', 429, { counter: rateLimitCounter, expires: current.expires, maxWaiting: current.maxWaiting })
         }
         try {
           // log the first throttling and every 50th entry
@@ -181,9 +203,12 @@ class RateLimiter {
         const currentWaiting = this.cache.get(waitingKey) || 0
         const newWaiting = currentWaiting + 1
         this.cache.set(waitingKey, newWaiting, current.expires + 5)
-        if (newWaiting > 10) {
+        if (newWaiting > current.maxWaiting) {
           this.cache.set(waitingKey, currentWaiting, current.expires + 5)
-          throw new ACError('tooManyRequestsFromThisIP', 429, { counter: rateLimitCounter, expires: current.expires })
+          if (rateLimitCounter % 10 === 0) {
+            rateLogger({ type: 'Waiting', rateLimitCounter, currentLimit: current.limit })
+          }
+          throw new ACError('tooManyConcurrentRequests', 429, { counter: rateLimitCounter, expires: current.expires, maxWaiting: current.maxWaiting })
         }
         try {
           // log the first throttling and every 50th entry
