@@ -4,7 +4,7 @@ This tool provides rate-limiter that can be used as middleware with ExpressJs.
 
 For huge production load it is recommended that you use it with Redis. However, for smaller applications you can use the build in Node Cache.
 
-[![Node.js CI](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/node.js.yml/badge.svg)](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/node.js.yml) [![CodeQL](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/github-code-scanning/codeql)
+[![Node.js CI](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/node.js.yml/badge.svg)](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/node.js.yml) [![CodeQL](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/AdmiralCloud/ac-ratelimiter/actions/workflows/github-code-scanning/codeql) [![AC RateLimiter on StartupScores](https://startupscores.com/badge/ac-ratelimiter.svg?style=shield&v=combo&theme=dark)](https://startupscores.com/open-source/ac-ratelimiter)
 
 ## Breaking changes for version 3
 ### New error `tooManyConcurrentRequests`
